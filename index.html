@@ -46,7 +46,6 @@
       z-index: 0;
     }
 
-    /* Font fallbacks for offline execution */
     .font-orbitron {
       font-family: 'Orbitron', 'Segoe UI', Impact, sans-serif;
     }
@@ -151,6 +150,18 @@
       transform: scale(0.92);
     }
 
+    /* Position Fix for Action Buttons Container */
+    .action-container {
+      position: absolute;
+      bottom: 24px;
+      right: 24px;
+      display: flex;
+      flex-direction: row;
+      gap: 12px;
+      align-items: center;
+      pointer-events: auto;
+    }
+
     #joystickBase {
       pointer-events: auto;
       width: 120px;
@@ -205,22 +216,15 @@
     }
 
     @keyframes pulse-glow {
-
-      0%,
-      100% {
-        opacity: 0.7;
-      }
-
-      50% {
-        opacity: 1;
-      }
+      0%, 100% { opacity: 0.7; }
+      50% { opacity: 1; }
     }
 
     .animate-pulse-glow {
       animation: pulse-glow 2s ease-in-out infinite;
     }
 
-    /* Structural & Utility Classes Replacing External Tailwind Dependency */
+    /* Structural & Utility Classes */
     .flex { display: flex; }
     .flex-col { flex-direction: column; }
     .flex-row { flex-direction: row; }
@@ -251,7 +255,6 @@
     .px-6 { padding-left: 1.5rem; padding-right: 1.5rem; }
     .py-2 { padding-top: 0.5rem; padding-bottom: 0.5rem; }
     .py-3 { padding-top: 0.75rem; padding-bottom: 0.75rem; }
-    .gap-1 { gap: 0.25rem; }
     .gap-1\.5 { gap: 0.375rem; }
     .gap-2 { gap: 0.5rem; }
     .gap-3 { gap: 0.75rem; }
@@ -264,7 +267,6 @@
     .mt-1\.5 { margin-top: 0.375rem; }
     .pt-1 { padding-top: 0.25rem; }
     .pt-2 { padding-top: 0.5rem; }
-    .space-y-1 > * + * { margin-top: 0.25rem; }
     .space-y-1\.5 > * + * { margin-top: 0.375rem; }
     .space-y-2 > * + * { margin-top: 0.5rem; }
     .uppercase { text-transform: uppercase; }
@@ -380,7 +382,7 @@
     </div>
   </div>
 
-  <!-- MOBILE TOUCH CONTROLS (VIRTUAL 360° JOYSTICK & ACTION BUTTONS) -->
+  <!-- MOBILE TOUCH CONTROLS -->
   <div id="mobileUI">
     <!-- Bottom-Left Virtual 360° Analog Joystick -->
     <div id="joystickBase">
@@ -392,7 +394,7 @@
     </div>
 
     <!-- Bottom-Right Action Buttons -->
-    <div class="absolute bottom-6 right-5 flex flex-col sm:flex-row gap-3 items-center">
+    <div class="action-container">
       <div id="btnBrake" class="touch-action-btn glass"
         style="background:rgba(20,40,80,0.55);border:2px solid rgba(56,189,248,0.5)">
         <span class="text-base leading-none">🛑</span>
@@ -452,11 +454,11 @@
   <canvas id="gameCanvas"></canvas>
 
   <script>
-    // ===================== INLINE SERVICE WORKER FOR OFFLINE CACHING =====================
+    // Inline Service Worker
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
         const swCode = `
-          const CACHE_NAME = 'zero-g-void-offline-v1';
+          const CACHE_NAME = 'zero-g-void-offline-v2';
           self.addEventListener('install', (e) => {
             e.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.addAll(['./', './index.html'])));
           });
@@ -469,7 +471,7 @@
       });
     }
 
-    // ===================== WEB AUDIO API SYNTH ENGINE =====================
+    // Web Audio API Synth Engine
     const AudioEngine = (() => {
       let ctx = null;
       let humOsc = null, humGain = null;
@@ -611,7 +613,7 @@
       };
     })();
 
-    // ===================== GAME PARAMETERS & CURVES =====================
+    // Game Parameters
     const MAX_PARTICLES = 50;
     const MAX_ASTEROIDS = 20;
     const MAX_BLACKHOLES = 3;
@@ -625,7 +627,6 @@
       'LVL 10+ - BEYOND'
     ];
 
-    // Diminishing returns curve: +100 -> +85 -> +70 -> ... floor of +15
     const POINTS_PER_LEVEL = [100, 85, 70, 55, 40, 25, 15, 15, 15, 15];
 
     const canvas = document.getElementById('gameCanvas');
@@ -691,7 +692,7 @@
       return s;
     }
 
-    // ===================== MULTI-INPUT HANDLING =====================
+    // Multi-Input Handling
     const keys = {};
     window.addEventListener('keydown', e => {
       keys[e.code] = true;
@@ -703,7 +704,6 @@
       keys[e.code] = false;
     });
 
-    // Mobile Action Touch Buttons
     let touchBrake = false;
     let touchNitro = false;
     const btnBrake = document.getElementById('btnBrake');
@@ -725,7 +725,7 @@
       btnNitro.addEventListener('mouseup', e => { e.preventDefault(); touchNitro = false; });
     }
 
-    // Virtual 360° Analog Joystick
+    // Virtual Joystick
     const joystick = {
       active: false,
       touchId: null,
@@ -815,7 +815,7 @@
       window.addEventListener('touchcancel', endJoystickTouch, { passive: false });
     }
 
-    // ===================== PROCEDURAL GENERATION =====================
+    // Procedural Spawner
     function createAsteroid(x, y, sizeMin, sizeMax, speedMul) {
       const r = Math.random() * (sizeMax - sizeMin) + sizeMin;
       const verts = [];
@@ -837,52 +837,39 @@
       return {
         x: Number.isFinite(x) ? x : 0,
         y: Number.isFinite(y) ? y : 0,
-        r: r,
-        verts: verts,
-        craters: craters,
+        r: r, verts: verts, craters: craters,
         angle: Math.random() * Math.PI * 2,
         rotSpeed: (Math.random() - 0.5) * 1.5 * speedMul,
-        vx: Math.cos(dir) * speed,
-        vy: Math.sin(dir) * speed,
+        vx: Math.cos(dir) * speed, vy: Math.sin(dir) * speed,
         color: `hsl(${Math.random() * 30 + 15}, ${Math.random() * 15 + 10}%, ${Math.random() * 15 + 22}%)`
       };
     }
 
     function createAstronaut(x, y) {
       return {
-        x: Number.isFinite(x) ? x : 0,
-        y: Number.isFinite(y) ? y : 0,
-        angle: Math.random() * Math.PI * 2,
-        rotSpeed: (Math.random() - 0.5) * 1.2,
-        pulse: Math.random() * Math.PI * 2,
-        bobPhase: Math.random() * Math.PI * 2,
-        radius: 12
+        x: Number.isFinite(x) ? x : 0, y: Number.isFinite(y) ? y : 0,
+        angle: Math.random() * Math.PI * 2, rotSpeed: (Math.random() - 0.5) * 1.2,
+        pulse: Math.random() * Math.PI * 2, bobPhase: Math.random() * Math.PI * 2, radius: 12
       };
     }
 
     function createBlackhole(x, y) {
       return {
         type: 'blackhole',
-        x: Number.isFinite(x) ? x : 0,
-        y: Number.isFinite(y) ? y : 0,
-        radius: 35,
-        eventHorizon: 280,
-        pullForce: 380,
+        x: Number.isFinite(x) ? x : 0, y: Number.isFinite(y) ? y : 0,
+        radius: 35, eventHorizon: 280, pullForce: 380,
         pulseAngle: Math.random() * Math.PI * 2,
-        vx: (Math.random() - 0.5) * 6,
-        vy: (Math.random() - 0.5) * 6
+        vx: (Math.random() - 0.5) * 6, vy: (Math.random() - 0.5) * 6
       };
     }
 
     function spawnAstronautAround(g) {
-      const a = Math.random() * Math.PI * 2;
-      const d = 500 + Math.random() * 400;
+      const a = Math.random() * Math.PI * 2, d = 500 + Math.random() * 400;
       return createAstronaut(g.ship.x + Math.cos(a) * d, g.ship.y + Math.sin(a) * d);
     }
 
     function spawnAsteroidAround(g) {
-      const a = Math.random() * Math.PI * 2;
-      const d = 600 + Math.random() * 500;
+      const a = Math.random() * Math.PI * 2, d = 600 + Math.random() * 500;
       const lvl = Math.max(1, g.threatLevel);
       const sizeMin = 18 + Math.min(lvl, 10) * 2;
       const sizeMax = 38 + Math.min(lvl, 10) * 4;
@@ -893,10 +880,8 @@
     function spawnBlackholeAround(g) {
       const shipAngle = g.ship.angle || 0;
       const offset = (Math.random() * 240 + 60) * Math.PI / 180;
-      const a = shipAngle + offset;
-      const d = 750 + Math.random() * 450;
-      const bx = g.ship.x + Math.cos(a) * d;
-      const by = g.ship.y + Math.sin(a) * d;
+      const a = shipAngle + offset, d = 750 + Math.random() * 450;
+      const bx = g.ship.x + Math.cos(a) * d, by = g.ship.y + Math.sin(a) * d;
       for (let i = 0; i < g.blackholes.length; i++) {
         const bh = g.blackholes[i];
         const ddx = bh.x - bx, ddy = bh.y - by;
@@ -906,32 +891,24 @@
     }
 
     function addParticle(g, p) {
-      if (g.particles.length >= MAX_PARTICLES) {
-        g.particles.shift();
-      }
+      if (g.particles.length >= MAX_PARTICLES) g.particles.shift();
       g.particles.push(p);
     }
 
     function spawnParticles(g, x, y, count, color, speed, life, size) {
       const safeCount = Math.min(count, 15);
       for (let i = 0; i < safeCount; i++) {
-        const a = Math.random() * Math.PI * 2;
-        const s = Math.random() * speed;
+        const a = Math.random() * Math.PI * 2, s = Math.random() * speed;
         addParticle(g, {
-          x, y,
-          vx: Math.cos(a) * s,
-          vy: Math.sin(a) * s,
-          life, maxLife: life,
-          color,
-          size: Math.random() * size + 1
+          x, y, vx: Math.cos(a) * s, vy: Math.sin(a) * s,
+          life, maxLife: life, color, size: Math.random() * size + 1
         });
       }
     }
 
-    // ===================== GAME PHYSICS & UPDATE =====================
+    // Physics Engine Update
     function update(g, dt) {
       if (!g || !g.running || g.over) return;
-
       if (!Number.isFinite(dt) || dt <= 0) dt = 0.016;
       g.time += dt;
 
@@ -940,7 +917,6 @@
         ship.x = 0; ship.y = 0; ship.vx = 0; ship.vy = 0;
       }
 
-      // --- Input vector combination (Keyboard + Virtual Joystick) ---
       let tx = 0, ty = 0;
       if (keys['KeyW'] || keys['ArrowUp']) ty -= 1;
       if (keys['KeyS'] || keys['ArrowDown']) ty += 1;
@@ -948,8 +924,7 @@
       if (keys['KeyD'] || keys['ArrowRight']) tx += 1;
 
       if (joystick.active && (joystick.dx !== 0 || joystick.dy !== 0)) {
-        tx = joystick.dx;
-        ty = joystick.dy;
+        tx = joystick.dx; ty = joystick.dy;
       }
 
       const hasThrust = (tx !== 0 || ty !== 0);
@@ -958,7 +933,6 @@
       g.braking = isBraking;
       g.boosting = isBoosting && hasThrust;
 
-      // --- Thrust & Direction ---
       if (hasThrust) {
         const lenSq = tx * tx + ty * ty;
         if (lenSq > 0) {
@@ -972,20 +946,15 @@
           ship.vx += (tx / len) * thrust * dt;
           ship.vy += (ty / len) * thrust * dt;
 
-          // Thruster trail particles
           if (Math.random() < 0.6) {
             const ex = ship.x - Math.cos(ship.angle) * 16;
             const ey = ship.y - Math.sin(ship.angle) * 16;
             const sa = ship.angle + Math.PI + (Math.random() - 0.5) * 0.8;
             const sp = Math.random() * 100 + 50;
             addParticle(g, {
-              x: ex + (Math.random() - 0.5) * 4,
-              y: ey + (Math.random() - 0.5) * 4,
-              vx: Math.cos(sa) * sp + ship.vx * 0.3,
-              vy: Math.sin(sa) * sp + ship.vy * 0.3,
-              life: 0.3, maxLife: 0.3,
-              color: isBoosting ? '#ffa020' : '#40a0ff',
-              size: Math.random() * 2.5 + 1
+              x: ex + (Math.random() - 0.5) * 4, y: ey + (Math.random() - 0.5) * 4,
+              vx: Math.cos(sa) * sp + ship.vx * 0.3, vy: Math.sin(sa) * sp + ship.vy * 0.3,
+              life: 0.3, maxLife: 0.3, color: isBoosting ? '#ffa020' : '#40a0ff', size: Math.random() * 2.5 + 1
             });
           }
 
@@ -998,90 +967,61 @@
         }
       }
 
-      // --- Gravitational Retro-Brake ---
       if (isBraking) {
         const decay = Math.pow(0.05, dt);
-        ship.vx *= decay;
-        ship.vy *= decay;
-        if (Math.random() < 0.3) {
-          spawnParticles(g, ship.x, ship.y, 1, '#60d0ff', 40, 0.2, 2);
-        }
+        ship.vx *= decay; ship.vy *= decay;
+        if (Math.random() < 0.3) spawnParticles(g, ship.x, ship.y, 1, '#60d0ff', 40, 0.2, 2);
       }
 
-      // --- Passive Drift Drag & Speed Cap ---
       const drag = Math.pow(0.992, dt * 60);
-      ship.vx *= drag;
-      ship.vy *= drag;
+      ship.vx *= drag; ship.vy *= drag;
 
       const spdSq = ship.vx * ship.vx + ship.vy * ship.vy;
       const maxSpd = 500;
       if (spdSq > maxSpd * maxSpd) {
         const spd = Math.sqrt(spdSq);
-        ship.vx = (ship.vx / spd) * maxSpd;
-        ship.vy = (ship.vy / spd) * maxSpd;
+        ship.vx = (ship.vx / spd) * maxSpd; ship.vy = (ship.vy / spd) * maxSpd;
       }
 
-      ship.x += ship.vx * dt;
-      ship.y += ship.vy * dt;
+      ship.x += ship.vx * dt; ship.y += ship.vy * dt;
 
-      // --- Nitro & Shield Regeneration ---
       if (!isBoosting) g.nitro = Math.min(100, g.nitro + 12 * dt);
       g.shieldRegenDelay = Math.max(0, g.shieldRegenDelay - dt);
       if (g.shieldRegenDelay <= 0) g.shield = Math.min(100, g.shield + 8 * dt);
       g.invincibleTimer = Math.max(0, g.invincibleTimer - dt);
       g.screenShake *= Math.pow(0.02, dt);
 
-      // --- Camera Centering ---
       const camSmooth = 1 - Math.pow(0.001, dt);
       g.camera.x += (ship.x - g.camera.x) * camSmooth;
       g.camera.y += (ship.y - g.camera.y) * camSmooth;
 
-      // --- Entity Spawning Limits ---
       const targetAstronauts = Math.min(2 + Math.floor(g.threatLevel * 0.3), MAX_ASTRONAUTS);
-      while (g.astronauts.length < targetAstronauts) {
-        g.astronauts.push(spawnAstronautAround(g));
-      }
+      while (g.astronauts.length < targetAstronauts) g.astronauts.push(spawnAstronautAround(g));
 
       const targetAsteroids = Math.min(6 + g.threatLevel * 2, MAX_ASTEROIDS);
-      while (g.asteroids.length < targetAsteroids) {
-        g.asteroids.push(spawnAsteroidAround(g));
-      }
+      while (g.asteroids.length < targetAsteroids) g.asteroids.push(spawnAsteroidAround(g));
 
       if (g.threatLevel >= 2) {
         const targetBH = Math.min(Math.floor((g.threatLevel - 1) * 0.5) + 1, MAX_BLACKHOLES);
         while (g.blackholes.length < targetBH) {
           const bh = spawnBlackholeAround(g);
-          if (bh) g.blackholes.push(bh);
-          else break;
+          if (bh) g.blackholes.push(bh); else break;
         }
       }
 
-      // --- Update Astronauts ---
       for (let i = 0; i < g.astronauts.length; i++) {
-        const a = g.astronauts[i];
-        a.angle += a.rotSpeed * dt;
-        a.pulse += dt * 3;
-        a.bobPhase += dt * 2;
+        const a = g.astronauts[i]; a.angle += a.rotSpeed * dt; a.pulse += dt * 3; a.bobPhase += dt * 2;
       }
 
-      // --- Update Asteroids ---
       for (let i = 0; i < g.asteroids.length; i++) {
-        const a = g.asteroids[i];
-        a.x += a.vx * dt;
-        a.y += a.vy * dt;
-        a.angle += a.rotSpeed * dt;
+        const a = g.asteroids[i]; a.x += a.vx * dt; a.y += a.vy * dt; a.angle += a.rotSpeed * dt;
       }
 
-      // --- Singularity Gravitational Engine ---
       let maxHumIntensity = 0;
       for (let i = 0; i < g.blackholes.length; i++) {
         const bh = g.blackholes[i];
-        bh.pulseAngle += dt * 3;
-        bh.x += bh.vx * dt;
-        bh.y += bh.vy * dt;
-
-        const dx = bh.x - ship.x;
-        const dy = bh.y - ship.y;
+        bh.pulseAngle += dt * 3; bh.x += bh.vx * dt; bh.y += bh.vy * dt;
+        const dx = bh.x - ship.x, dy = bh.y - ship.y;
         const distSq = dx * dx + dy * dy;
         const ehSq = bh.eventHorizon * bh.eventHorizon;
 
@@ -1097,61 +1037,42 @@
           if (Math.random() < intensity * 0.4) {
             const pa = Math.atan2(dy, dx);
             addParticle(g, {
-              x: ship.x + (Math.random() - 0.5) * 20,
-              y: ship.y + (Math.random() - 0.5) * 20,
-              vx: Math.cos(pa) * 50 * intensity,
-              vy: Math.sin(pa) * 50 * intensity,
-              life: 0.3, maxLife: 0.3,
-              color: intensity > 0.6 ? '#c084fc' : '#a855f7',
-              size: Math.random() * 2 + 0.5
+              x: ship.x + (Math.random() - 0.5) * 20, y: ship.y + (Math.random() - 0.5) * 20,
+              vx: Math.cos(pa) * 50 * intensity, vy: Math.sin(pa) * 50 * intensity,
+              life: 0.3, maxLife: 0.3, color: intensity > 0.6 ? '#c084fc' : '#a855f7', size: Math.random() * 2 + 0.5
             });
           }
         }
 
-        // Event Horizon Instant Collapse
         const deathRadius = bh.radius + ship.radius * 0.5;
         if (distSq < deathRadius * deathRadius) {
           g.singularityDeathReason = 'CONSUMED BY THE VOID SINGULARITY';
-          g.over = true;
-          g.running = false;
-          AudioEngine.singularityDeath();
-          AudioEngine.stopSingularityHum();
+          g.over = true; g.running = false;
+          AudioEngine.singularityDeath(); AudioEngine.stopSingularityHum();
           spawnParticles(g, bh.x, bh.y, 25, '#c084fc', 120, 0.7, 3);
-          showGameOver(g);
-          return;
+          showGameOver(g); return;
         }
 
-        // Pull Asteroids into Black Hole
         for (let j = 0; j < g.asteroids.length; j++) {
           const ast = g.asteroids[j];
-          const adx = bh.x - ast.x;
-          const ady = bh.y - ast.y;
+          const adx = bh.x - ast.x, ady = bh.y - ast.y;
           const adistSq = adx * adx + ady * ady;
           if (adistSq < ehSq && adistSq > 25) {
             const adist = Math.sqrt(adistSq);
             const aPull = (1 - adist / bh.eventHorizon) * bh.pullForce * 0.5;
-            ast.vx += (adx / adist) * aPull * dt;
-            ast.vy += (ady / adist) * aPull * dt;
+            ast.vx += (adx / adist) * aPull * dt; ast.vy += (ady / adist) * aPull * dt;
           }
-          const consumeRadius = bh.radius * 1.2;
-          if (adistSq < consumeRadius * consumeRadius) {
-            spawnParticles(g, ast.x, ast.y, 6, '#a855f7', 60, 0.3, 2);
-            ast._consumed = true;
+          if (adistSq < bh.radius * bh.radius * 1.44) {
+            spawnParticles(g, ast.x, ast.y, 6, '#a855f7', 60, 0.3, 2); ast._consumed = true;
           }
         }
       }
 
-      if (g.asteroids.some(a => a._consumed)) {
-        g.asteroids = g.asteroids.filter(a => !a._consumed);
-      }
+      if (g.asteroids.some(a => a._consumed)) g.asteroids = g.asteroids.filter(a => !a._consumed);
 
-      if (maxHumIntensity > 0.01) {
-        AudioEngine.updateSingularityHum(maxHumIntensity);
-      } else {
-        AudioEngine.stopSingularityHum();
-      }
+      if (maxHumIntensity > 0.01) AudioEngine.updateSingularityHum(maxHumIntensity);
+      else AudioEngine.stopSingularityHum();
 
-      // --- Rescue Astronauts (Diminishing Curve) ---
       for (let i = g.astronauts.length - 1; i >= 0; i--) {
         const a = g.astronauts[i];
         const dx = a.x - ship.x, dy = a.y - ship.y;
@@ -1166,11 +1087,9 @@
           if (g.scorePopups.length >= MAX_POPUPS) g.scorePopups.shift();
           g.scorePopups.push({ x: a.x, y: a.y, text: `+${pts}`, life: 1.2, maxLife: 1.2, color: '#40ff80' });
 
-          spawnParticles(g, a.x, a.y, 15, '#40ffa0', 90, 0.5, 3);
-          AudioEngine.rescue();
+          spawnParticles(g, a.x, a.y, 15, '#40ffa0', 90, 0.5, 3); AudioEngine.rescue();
           g.astronauts.splice(i, 1);
 
-          // Threat advancement every 3 rescues
           const rescuesForNext = g.threatLevel * 3;
           if (g.rescues >= rescuesForNext) {
             g.threatLevel = Math.min(g.threatLevel + 1, 10);
@@ -1182,7 +1101,6 @@
         }
       }
 
-      // --- Asteroid Collision Check ---
       if (g.invincibleTimer <= 0) {
         for (let i = 0; i < g.asteroids.length; i++) {
           const a = g.asteroids[i];
@@ -1193,28 +1111,20 @@
             const dist = Math.sqrt(distSq) || 1;
             const dmg = 8 + g.threatLevel * 2;
             if (g.shield > 0) {
-              g.shield = Math.max(0, g.shield - dmg * 1.5);
-              AudioEngine.shieldHit();
+              g.shield = Math.max(0, g.shield - dmg * 1.5); AudioEngine.shieldHit();
               spawnParticles(g, ship.x, ship.y, 8, '#40c0ff', 100, 0.3, 2);
             } else {
-              g.hull = Math.max(0, g.hull - dmg);
-              AudioEngine.hit();
+              g.hull = Math.max(0, g.hull - dmg); AudioEngine.hit();
               spawnParticles(g, ship.x, ship.y, 12, '#ff4040', 120, 0.4, 3);
             }
 
-            g.shieldRegenDelay = 2.5;
-            g.invincibleTimer = 0.4;
-            g.screenShake = 8;
-
+            g.shieldRegenDelay = 2.5; g.invincibleTimer = 0.4; g.screenShake = 8;
             const nx = dx / dist, ny = dy / dist;
-            ship.vx -= nx * 120;
-            ship.vy -= ny * 120;
+            ship.vx -= nx * 120; ship.vy -= ny * 120;
 
             if (g.hull <= 0) {
-              g.over = true;
-              g.running = false;
-              AudioEngine.gameOver();
-              AudioEngine.stopSingularityHum();
+              g.over = true; g.running = false;
+              AudioEngine.gameOver(); AudioEngine.stopSingularityHum();
               spawnParticles(g, ship.x, ship.y, 25, '#ff6030', 150, 0.7, 4);
               showGameOver(g);
             }
@@ -1223,22 +1133,16 @@
         }
       }
 
-      // --- Particles & Popups update ---
       for (let i = g.particles.length - 1; i >= 0; i--) {
-        const p = g.particles[i];
-        p.x += p.vx * dt;
-        p.y += p.vy * dt;
-        p.life -= dt;
+        const p = g.particles[i]; p.x += p.vx * dt; p.y += p.vy * dt; p.life -= dt;
         if (p.life <= 0) g.particles.splice(i, 1);
       }
 
       for (let i = g.scorePopups.length - 1; i >= 0; i--) {
-        const sp = g.scorePopups[i];
-        sp.life -= dt;
+        const sp = g.scorePopups[i]; sp.life -= dt;
         if (sp.life <= 0) g.scorePopups.splice(i, 1);
       }
 
-      // --- Boundary Pruning ---
       const cullDistSq = 1400 * 1400;
       g.asteroids = g.asteroids.filter(a => {
         if (!Number.isFinite(a.x) || !Number.isFinite(a.y)) return false;
@@ -1259,36 +1163,26 @@
         return (dx * dx + dy * dy) < bhCullDistSq;
       });
 
-      // --- Parallax Stars Wrapping ---
       const wrapStars = (stars, parallax) => {
         for (let i = 0; i < stars.length; i++) {
           const s = stars[i];
-          let sx = s.x - g.camera.x * parallax;
-          let sy = s.y - g.camera.y * parallax;
-          if (sx < -3000) s.x += 6000;
-          else if (sx > 3000) s.x -= 6000;
-          if (sy < -3000) s.y += 6000;
-          else if (sy > 3000) s.y -= 6000;
+          let sx = s.x - g.camera.x * parallax, sy = s.y - g.camera.y * parallax;
+          if (sx < -3000) s.x += 6000; else if (sx > 3000) s.x -= 6000;
+          if (sy < -3000) s.y += 6000; else if (sy > 3000) s.y -= 6000;
         }
       };
-      wrapStars(g.stars, 0.3);
-      wrapStars(g.starsDeep, 0.12);
+      wrapStars(g.stars, 0.3); wrapStars(g.starsDeep, 0.12);
 
       updateHUD(g);
     }
 
-    // ===================== RENDERING PIPELINE =====================
+    // Render Canvas Loop
     function render(g) {
-      C.setTransform(1, 0, 0, 1, 0, 0);
-      C.clearRect(0, 0, W, H);
+      C.setTransform(1, 0, 0, 1, 0, 0); C.clearRect(0, 0, W, H);
 
-      // Deep Space Radial Glow
       const bgGrad = C.createRadialGradient(W / 2, H / 2, 0, W / 2, H / 2, Math.max(W, H) * 0.7);
-      bgGrad.addColorStop(0, '#0a0e1c');
-      bgGrad.addColorStop(0.5, '#050814');
-      bgGrad.addColorStop(1, '#020408');
-      C.fillStyle = bgGrad;
-      C.fillRect(0, 0, W, H);
+      bgGrad.addColorStop(0, '#0a0e1c'); bgGrad.addColorStop(0.5, '#050814'); bgGrad.addColorStop(1, '#020408');
+      C.fillStyle = bgGrad; C.fillRect(0, 0, W, H);
 
       let shakeX = 0, shakeY = 0;
       if (g.screenShake > 0.5) {
@@ -1300,34 +1194,24 @@
       try {
         C.translate(W / 2 + shakeX, H / 2 + shakeY);
 
-        // Deep Parallax Stars
         for (let i = 0; i < g.starsDeep.length; i++) {
           const s = g.starsDeep[i];
-          const sx = s.x - g.camera.x * 0.12;
-          const sy = s.y - g.camera.y * 0.12;
-          C.globalAlpha = s.b * 0.35;
-          C.fillStyle = '#6080c0';
-          C.beginPath();
-          C.arc(sx, sy, s.r * 0.7, 0, Math.PI * 2);
-          C.fill();
+          const sx = s.x - g.camera.x * 0.12, sy = s.y - g.camera.y * 0.12;
+          C.globalAlpha = s.b * 0.35; C.fillStyle = '#6080c0';
+          C.beginPath(); C.arc(sx, sy, s.r * 0.7, 0, Math.PI * 2); C.fill();
         }
 
-        // Near Parallax Stars
         for (let i = 0; i < g.stars.length; i++) {
           const s = g.stars[i];
-          const sx = s.x - g.camera.x * 0.3;
-          const sy = s.y - g.camera.y * 0.3;
+          const sx = s.x - g.camera.x * 0.3, sy = s.y - g.camera.y * 0.3;
           C.globalAlpha = Math.min(1, Math.max(0, s.b * 0.6 + Math.sin(g.time * 2 + s.x) * 0.1));
           C.fillStyle = '#a0c0e0';
-          C.beginPath();
-          C.arc(sx, sy, s.r, 0, Math.PI * 2);
-          C.fill();
+          C.beginPath(); C.arc(sx, sy, s.r, 0, Math.PI * 2); C.fill();
         }
         C.globalAlpha = 1;
 
         const cx = g.camera.x, cy = g.camera.y;
 
-        // --- Render Asteroids ---
         for (let i = 0; i < g.asteroids.length; i++) {
           const a = g.asteroids[i];
           const ax = a.x - cx, ay = a.y - cy;
@@ -1335,40 +1219,25 @@
 
           C.save();
           try {
-            C.translate(ax, ay);
-            C.rotate(a.angle);
-            C.beginPath();
+            C.translate(ax, ay); C.rotate(a.angle); C.beginPath();
             if (a.verts && a.verts.length > 0) {
               C.moveTo(a.verts[0].x, a.verts[0].y);
-              for (let v = 1; v < a.verts.length; v++) {
-                C.lineTo(a.verts[v].x, a.verts[v].y);
-              }
-              C.closePath();
-              C.fillStyle = a.color;
-              C.fill();
-              C.strokeStyle = 'rgba(180,160,140,0.3)';
-              C.lineWidth = 1.5;
-              C.stroke();
+              for (let v = 1; v < a.verts.length; v++) C.lineTo(a.verts[v].x, a.verts[v].y);
+              C.closePath(); C.fillStyle = a.color; C.fill();
+              C.strokeStyle = 'rgba(180,160,140,0.3)'; C.lineWidth = 1.5; C.stroke();
             }
 
             if (a.craters) {
               for (let c = 0; c < a.craters.length; c++) {
                 const cr = a.craters[c];
-                C.beginPath();
-                C.arc(cr.x, cr.y, cr.r, 0, Math.PI * 2);
-                C.fillStyle = 'rgba(0,0,0,0.25)';
-                C.fill();
-                C.strokeStyle = 'rgba(100,80,60,0.2)';
-                C.lineWidth = 0.8;
-                C.stroke();
+                C.beginPath(); C.arc(cr.x, cr.y, cr.r, 0, Math.PI * 2);
+                C.fillStyle = 'rgba(0,0,0,0.25)'; C.fill();
+                C.strokeStyle = 'rgba(100,80,60,0.2)'; C.lineWidth = 0.8; C.stroke();
               }
             }
-          } finally {
-            C.restore();
-          }
+          } finally { C.restore(); }
         }
 
-        // --- Render Black Hole Singularities ---
         for (let i = 0; i < g.blackholes.length; i++) {
           const bh = g.blackholes[i];
           const bx = bh.x - cx, by = bh.y - cy;
@@ -1377,71 +1246,45 @@
           C.save();
           try {
             C.translate(bx, by);
-
-            // Accretion Radial Gradient
             const accGrad = C.createRadialGradient(0, 0, bh.radius * 0.8, 0, 0, bh.eventHorizon);
             accGrad.addColorStop(0, 'rgba(168,85,247,0.2)');
             accGrad.addColorStop(0.3, 'rgba(139,92,246,0.12)');
             accGrad.addColorStop(0.6, 'rgba(56,189,248,0.06)');
             accGrad.addColorStop(1, 'rgba(3,7,18,0)');
-            C.beginPath();
-            C.arc(0, 0, bh.eventHorizon, 0, Math.PI * 2);
-            C.fillStyle = accGrad;
-            C.fill();
+            C.beginPath(); C.arc(0, 0, bh.eventHorizon, 0, Math.PI * 2);
+            C.fillStyle = accGrad; C.fill();
 
-            // Spiral accretion trails
             for (let s = 0; s < 4; s++) {
               const sAngle = bh.pulseAngle * 0.5 + (s / 4) * Math.PI * 2;
               C.save();
               try {
-                C.rotate(sAngle);
-                C.beginPath();
+                C.rotate(sAngle); C.beginPath();
                 for (let t = 0; t < 30; t++) {
                   const frac = t / 30;
                   const r = bh.radius * 1.3 + frac * (bh.eventHorizon * 0.65 - bh.radius);
                   const spiral = frac * Math.PI * 1.8;
-                  const sx = Math.cos(spiral) * r;
-                  const sy = Math.sin(spiral) * r;
-                  if (t === 0) C.moveTo(sx, sy);
-                  else C.lineTo(sx, sy);
+                  const sx = Math.cos(spiral) * r, sy = Math.sin(spiral) * r;
+                  if (t === 0) C.moveTo(sx, sy); else C.lineTo(sx, sy);
                 }
                 C.strokeStyle = `rgba(168,85,247,${0.1 + Math.sin(bh.pulseAngle + s) * 0.04})`;
-                C.lineWidth = 2.5;
-                C.stroke();
-              } finally {
-                C.restore();
-              }
+                C.lineWidth = 2.5; C.stroke();
+              } finally { C.restore(); }
             }
 
-            // Dashed glowing event horizon border
             C.save();
             try {
-              C.rotate(bh.pulseAngle);
-              C.beginPath();
+              C.rotate(bh.pulseAngle); C.beginPath();
               C.arc(0, 0, bh.radius + 4, 0, Math.PI * 2);
-              C.setLineDash([8, 12]);
-              C.strokeStyle = '#c084fc';
-              C.lineWidth = 2.5;
-              C.stroke();
-              C.setLineDash([]);
-            } finally {
-              C.restore();
-            }
+              C.setLineDash([8, 12]); C.strokeStyle = '#c084fc';
+              C.lineWidth = 2.5; C.stroke(); C.setLineDash([]);
+            } finally { C.restore(); }
 
-            // Dark Central Core
-            C.beginPath();
-            C.arc(0, 0, bh.radius, 0, Math.PI * 2);
-            C.fillStyle = '#000000';
-            C.fill();
-            C.strokeStyle = '#a855f7';
-            C.lineWidth = 2.2;
-            C.stroke();
-          } finally {
-            C.restore();
-          }
+            C.beginPath(); C.arc(0, 0, bh.radius, 0, Math.PI * 2);
+            C.fillStyle = '#000000'; C.fill();
+            C.strokeStyle = '#a855f7'; C.lineWidth = 2.2; C.stroke();
+          } finally { C.restore(); }
         }
 
-        // --- Render Astronauts ---
         for (let i = 0; i < g.astronauts.length; i++) {
           const a = g.astronauts[i];
           const ax = a.x - cx, ay = a.y - cy;
@@ -1450,134 +1293,75 @@
           const bob = Math.sin(a.bobPhase) * 3;
           C.save();
           try {
-            C.translate(ax, ay + bob);
-            C.rotate(a.angle);
+            C.translate(ax, ay + bob); C.rotate(a.angle);
+            C.beginPath(); C.arc(0, -4, 7, 0, Math.PI * 2);
+            C.fillStyle = '#e0e8f0'; C.fill();
+            C.beginPath(); C.arc(1, -4, 4.5, -0.5, 1.2);
+            C.fillStyle = 'rgba(60,180,255,0.7)'; C.fill();
+            C.fillStyle = '#c0c8d0'; C.fillRect(-5, 2, 10, 10);
+            C.fillStyle = '#8090a0'; C.fillRect(-7, 3, 3, 7);
+            C.fillStyle = '#a0a8b0'; C.fillRect(-4, 12, 3, 5); C.fillRect(1, 12, 3, 5);
+          } finally { C.restore(); }
 
-            // Helmet & Visor
-            C.beginPath();
-            C.arc(0, -4, 7, 0, Math.PI * 2);
-            C.fillStyle = '#e0e8f0';
-            C.fill();
-
-            C.beginPath();
-            C.arc(1, -4, 4.5, -0.5, 1.2);
-            C.fillStyle = 'rgba(60,180,255,0.7)';
-            C.fill();
-
-            // Suit & Pack
-            C.fillStyle = '#c0c8d0';
-            C.fillRect(-5, 2, 10, 10);
-            C.fillStyle = '#8090a0';
-            C.fillRect(-7, 3, 3, 7);
-            C.fillStyle = '#a0a8b0';
-            C.fillRect(-4, 12, 3, 5);
-            C.fillRect(1, 12, 3, 5);
-          } finally {
-            C.restore();
-          }
-
-          // Distress pulse beacon
           const pulseAlpha = Math.max(0, 0.3 + Math.sin(a.pulse) * 0.3);
-          C.beginPath();
-          C.arc(ax, ay, 18 + Math.sin(a.pulse) * 4, 0, Math.PI * 2);
-          C.strokeStyle = `rgba(60,255,140,${pulseAlpha})`;
-          C.lineWidth = 1.5;
-          C.stroke();
+          C.beginPath(); C.arc(ax, ay, 18 + Math.sin(a.pulse) * 4, 0, Math.PI * 2);
+          C.strokeStyle = `rgba(60,255,140,${pulseAlpha})`; C.lineWidth = 1.5; C.stroke();
         }
 
-        // --- Render Particles ---
         for (let i = 0; i < g.particles.length; i++) {
           const p = g.particles[i];
           const px = p.x - cx, py = p.y - cy;
           const alpha = Math.max(0, Math.min(1, p.life / p.maxLife));
-          C.globalAlpha = alpha;
-          C.fillStyle = p.color;
-          C.beginPath();
-          C.arc(px, py, Math.max(0.5, p.size * alpha), 0, Math.PI * 2);
-          C.fill();
+          C.globalAlpha = alpha; C.fillStyle = p.color;
+          C.beginPath(); C.arc(px, py, Math.max(0.5, p.size * alpha), 0, Math.PI * 2); C.fill();
         }
         C.globalAlpha = 1;
 
-        // --- Render Player Drone ---
         if (!g.over) {
           const sx = g.ship.x - cx, sy = g.ship.y - cy;
           C.save();
           try {
-            C.translate(sx, sy);
-            C.rotate(g.ship.angle);
+            C.translate(sx, sy); C.rotate(g.ship.angle);
+            if (g.invincibleTimer > 0 && Math.sin(g.time * 30) > 0) C.globalAlpha = 0.5;
 
-            if (g.invincibleTimer > 0 && Math.sin(g.time * 30) > 0) {
-              C.globalAlpha = 0.5;
-            }
-
-            // Cyan Energy Shield Bubble
             if (g.shield > 15) {
-              C.beginPath();
-              C.arc(0, 0, 20, 0, Math.PI * 2);
+              C.beginPath(); C.arc(0, 0, 20, 0, Math.PI * 2);
               C.strokeStyle = `rgba(60,180,255,${g.shield / 350})`;
-              C.lineWidth = 1.6;
-              C.stroke();
+              C.lineWidth = 1.6; C.stroke();
             }
 
-            // Sleek Directional Drone Body
             C.beginPath();
-            C.moveTo(18, 0);
-            C.lineTo(-10, -10);
-            C.lineTo(-6, -3);
-            C.lineTo(-14, -2);
-            C.lineTo(-14, 2);
-            C.lineTo(-6, 3);
-            C.lineTo(-10, 10);
+            C.moveTo(18, 0); C.lineTo(-10, -10); C.lineTo(-6, -3);
+            C.lineTo(-14, -2); C.lineTo(-14, 2); C.lineTo(-6, 3); C.lineTo(-10, 10);
             C.closePath();
 
             const shipGrad = C.createLinearGradient(-14, 0, 18, 0);
-            shipGrad.addColorStop(0, '#152540');
-            shipGrad.addColorStop(0.5, '#28456c');
-            shipGrad.addColorStop(1, '#4585c5');
-            C.fillStyle = shipGrad;
-            C.fill();
-            C.strokeStyle = 'rgba(100,180,255,0.6)';
-            C.lineWidth = 1.2;
-            C.stroke();
+            shipGrad.addColorStop(0, '#152540'); shipGrad.addColorStop(0.5, '#28456c'); shipGrad.addColorStop(1, '#4585c5');
+            C.fillStyle = shipGrad; C.fill();
+            C.strokeStyle = 'rgba(100,180,255,0.6)'; C.lineWidth = 1.2; C.stroke();
 
-            // Cockpit Glow
-            C.beginPath();
-            C.arc(6, 0, 4, 0, Math.PI * 2);
+            C.beginPath(); C.arc(6, 0, 4, 0, Math.PI * 2);
             const cockpitGrad = C.createRadialGradient(6, 0, 0, 6, 0, 5);
-            cockpitGrad.addColorStop(0, 'rgba(80,210,255,0.95)');
-            cockpitGrad.addColorStop(0.7, 'rgba(30,130,255,0.5)');
-            cockpitGrad.addColorStop(1, 'rgba(10,50,200,0)');
-            C.fillStyle = cockpitGrad;
-            C.fill();
-          } finally {
-            C.restore();
-          }
+            cockpitGrad.addColorStop(0, 'rgba(80,210,255,0.95)'); cockpitGrad.addColorStop(0.7, 'rgba(30,130,255,0.5)'); cockpitGrad.addColorStop(1, 'rgba(10,50,200,0)');
+            C.fillStyle = cockpitGrad; C.fill();
+          } finally { C.restore(); }
 
-          // Gravitational Brake Ring Effect
           if (g.braking) {
-            C.beginPath();
-            C.arc(sx, sy, 24 + Math.sin(g.time * 15) * 3, 0, Math.PI * 2);
-            C.strokeStyle = 'rgba(60,210,255,0.4)';
-            C.lineWidth = 2;
-            C.stroke();
+            C.beginPath(); C.arc(sx, sy, 24 + Math.sin(g.time * 15) * 3, 0, Math.PI * 2);
+            C.strokeStyle = 'rgba(60,210,255,0.4)'; C.lineWidth = 2; C.stroke();
           }
         }
 
-        // --- Floating Score Popups ---
         for (let i = 0; i < g.scorePopups.length; i++) {
           const sp = g.scorePopups[i];
           const px = sp.x - cx, py = sp.y - cy;
           const alpha = Math.max(0, Math.min(1, sp.life / sp.maxLife));
           const rise = (1 - sp.life / sp.maxLife) * 30;
-          C.globalAlpha = alpha;
-          C.font = sp.text.startsWith('+') ? '700 15px Orbitron' : '700 13px Orbitron';
-          C.fillStyle = sp.color;
-          C.textAlign = 'center';
-          C.fillText(sp.text, px, py - rise);
+          C.globalAlpha = alpha; C.font = sp.text.startsWith('+') ? '700 15px Orbitron' : '700 13px Orbitron';
+          C.fillStyle = sp.color; C.textAlign = 'center'; C.fillText(sp.text, px, py - rise);
         }
         C.globalAlpha = 1;
 
-        // --- Off-Screen Warning Indicators (Black Holes) ---
         for (let i = 0; i < g.blackholes.length; i++) {
           const bh = g.blackholes[i];
           const bhx = bh.x - cx, bhy = bh.y - cy;
@@ -1590,27 +1374,16 @@
 
           C.save();
           try {
-            C.translate(fx, fy);
-            C.rotate(angle);
-            C.beginPath();
+            C.translate(fx, fy); C.rotate(angle); C.beginPath();
             C.moveTo(12, 0); C.lineTo(-5, -7); C.lineTo(-5, 7); C.closePath();
-            C.fillStyle = `rgba(168,85,247,${0.4 + urgency * 0.4 + Math.sin(g.time * 5) * 0.15})`;
-            C.fill();
-            C.strokeStyle = `rgba(192,132,252,${0.5 + urgency * 0.3})`;
-            C.lineWidth = 1;
-            C.stroke();
+            C.fillStyle = `rgba(168,85,247,${0.4 + urgency * 0.4 + Math.sin(g.time * 5) * 0.15})`; C.fill();
+            C.strokeStyle = `rgba(192,132,252,${0.5 + urgency * 0.3})`; C.lineWidth = 1; C.stroke();
 
-            C.rotate(-angle);
-            C.font = '600 9px Rajdhani';
-            C.fillStyle = `rgba(192,132,252,${0.6 + urgency * 0.3})`;
-            C.textAlign = 'center';
-            C.fillText('⚠ ' + Math.round(dist) + 'm', 0, -12);
-          } finally {
-            C.restore();
-          }
+            C.rotate(-angle); C.font = '600 9px Rajdhani'; C.fillStyle = `rgba(192,132,252,${0.6 + urgency * 0.3})`;
+            C.textAlign = 'center'; C.fillText('⚠ ' + Math.round(dist) + 'm', 0, -12);
+          } finally { C.restore(); }
         }
 
-        // --- Off-Screen Distress Indicators (Astronauts) ---
         for (let i = 0; i < g.astronauts.length; i++) {
           const a = g.astronauts[i];
           const ax = a.x - cx, ay = a.y - cy;
@@ -1622,28 +1395,18 @@
 
           C.save();
           try {
-            C.translate(fx, fy);
-            C.rotate(angle);
-            C.beginPath();
+            C.translate(fx, fy); C.rotate(angle); C.beginPath();
             C.moveTo(10, 0); C.lineTo(-4, -5); C.lineTo(-4, 5); C.closePath();
-            C.fillStyle = `rgba(60,255,140,${0.5 + Math.sin(g.time * 4) * 0.2})`;
-            C.fill();
+            C.fillStyle = `rgba(60,255,140,${0.5 + Math.sin(g.time * 4) * 0.2})`; C.fill();
 
-            C.rotate(-angle);
-            C.font = '500 9px Rajdhani';
-            C.fillStyle = 'rgba(60,255,140,0.7)';
-            C.textAlign = 'center';
-            C.fillText(Math.round(dist) + 'm', 0, -10);
-          } finally {
-            C.restore();
-          }
+            C.rotate(-angle); C.font = '500 9px Rajdhani'; C.fillStyle = 'rgba(60,255,140,0.7)';
+            C.textAlign = 'center'; C.fillText(Math.round(dist) + 'm', 0, -10);
+          } finally { C.restore(); }
         }
-      } finally {
-        C.restore();
-      }
+      } finally { C.restore(); }
     }
 
-    // ===================== HUD UPDATE =====================
+    // HUD Update
     function updateHUD(g) {
       try {
         const hullBar = document.getElementById('hullBar');
@@ -1702,7 +1465,7 @@
       }
     }
 
-    // ===================== OVERLAYS =====================
+    // Overlays
     function showStart() {
       const overlay = document.getElementById('overlay');
       const startScreen = document.getElementById('startScreen');
@@ -1767,7 +1530,7 @@
       if (overlay) overlay.style.display = 'none';
     }
 
-    // ===================== GAME LOOP SAFEGUARDS =====================
+    // Loop Safeguards
     let lastTime = 0;
 
     function gameLoop(timestamp) {
@@ -1811,7 +1574,7 @@
       }
     }
 
-    // ===================== INITIALIZATION =====================
+    // Initialization
     const btnStart = document.getElementById('btnStart');
     const btnRestart = document.getElementById('btnRestart');
     if (btnStart) btnStart.addEventListener('click', startGame);
