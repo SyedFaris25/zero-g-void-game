@@ -1,0 +1,1723 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport"
+    content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <title>Zero-G Void: Infinite Rescue</title>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@400;500;600;700&display=swap"
+    rel="stylesheet" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+      touch-action: none;
+    }
+
+    html,
+    body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: #020408;
+      font-family: 'Rajdhani', sans-serif;
+      color: #e0e8f0;
+      user-select: none;
+      -webkit-user-select: none;
+      overscroll-behavior: none;
+    }
+
+    canvas {
+      display: block;
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 0;
+    }
+
+    .font-orbitron {
+      font-family: 'Orbitron', sans-serif
+    }
+
+    .font-rajdhani {
+      font-family: 'Rajdhani', sans-serif
+    }
+
+    .glass {
+      background: rgba(10, 16, 32, 0.65);
+      backdrop-filter: blur(12px) saturate(1.4);
+      -webkit-backdrop-filter: blur(12px) saturate(1.4);
+      border: 1px solid rgba(80, 140, 255, 0.2);
+      border-radius: 10px;
+    }
+
+    .glass-strong {
+      background: rgba(8, 12, 28, 0.85);
+      backdrop-filter: blur(20px) saturate(1.6);
+      -webkit-backdrop-filter: blur(20px) saturate(1.6);
+      border: 1px solid rgba(100, 160, 255, 0.28);
+      border-radius: 14px;
+    }
+
+    .glow-text {
+      text-shadow: 0 0 8px rgba(80, 160, 255, 0.6), 0 0 20px rgba(60, 120, 255, 0.3)
+    }
+
+    .glow-text-warn {
+      text-shadow: 0 0 8px rgba(255, 100, 60, 0.7), 0 0 20px rgba(255, 60, 30, 0.3)
+    }
+
+    .bar-container {
+      height: 8px;
+      background: rgba(255, 255, 255, 0.08);
+      border-radius: 4px;
+      overflow: hidden;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .bar-fill {
+      height: 100%;
+      border-radius: 3px;
+      transition: width 0.2s ease-out
+    }
+
+    .btn-void {
+      font-family: 'Orbitron', sans-serif;
+      background: linear-gradient(135deg, rgba(30, 80, 180, 0.75), rgba(70, 40, 180, 0.75));
+      border: 1px solid rgba(100, 180, 255, 0.45);
+      border-radius: 10px;
+      color: #c0d8ff;
+      cursor: pointer;
+      transition: all 0.2s;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+    }
+
+    .btn-void:hover {
+      background: linear-gradient(135deg, rgba(40, 100, 220, 0.9), rgba(90, 50, 210, 0.9));
+      border-color: rgba(130, 200, 255, 0.7);
+      box-shadow: 0 0 25px rgba(60, 120, 255, 0.5);
+      transform: scale(1.02);
+    }
+
+    .btn-void:active {
+      transform: scale(0.97)
+    }
+
+    /* Mobile Touch Controls */
+    #mobileUI {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      z-index: 20;
+    }
+
+    .touch-action-btn {
+      pointer-events: auto;
+      width: 68px;
+      height: 68px;
+      border-radius: 50%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Orbitron', sans-serif;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      user-select: none;
+      -webkit-user-select: none;
+      cursor: pointer;
+      transition: transform 0.1s, background-color 0.1s, box-shadow 0.1s;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
+    }
+
+    .touch-action-btn:active {
+      transform: scale(0.92);
+    }
+
+    #joystickBase {
+      pointer-events: auto;
+      width: 120px;
+      height: 120px;
+      border-radius: 50%;
+      position: absolute;
+      bottom: 24px;
+      left: 24px;
+      background: radial-gradient(circle, rgba(20, 35, 70, 0.4) 0%, rgba(10, 20, 45, 0.6) 80%);
+      border: 2px solid rgba(80, 160, 255, 0.35);
+      box-shadow: 0 0 20px rgba(40, 100, 220, 0.25), inset 0 0 15px rgba(40, 100, 220, 0.15);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    #joystickKnob {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      background: radial-gradient(circle, #60b0ff 0%, #2060c0 100%);
+      border: 2px solid rgba(160, 210, 255, 0.8);
+      box-shadow: 0 0 14px rgba(80, 180, 255, 0.7);
+      position: absolute;
+      pointer-events: none;
+      transition: transform 0.05s ease-out;
+    }
+
+    #hud {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      z-index: 15;
+      pointer-events: none;
+    }
+
+    #hud * {
+      pointer-events: auto
+    }
+
+    #overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 30;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    @keyframes pulse-glow {
+
+      0%,
+      100% {
+        opacity: 0.7
+      }
+
+      50% {
+        opacity: 1
+      }
+    }
+
+    .animate-pulse-glow {
+      animation: pulse-glow 2s ease-in-out infinite
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- TOP HUD BAR (MOBILE-RESPONSIVE GLASS CARDS) -->
+  <div id="hud" class="p-2 sm:p-3 md:p-4">
+    <div class="flex items-start justify-between gap-1.5 sm:gap-2 md:gap-3 flex-nowrap">
+
+      <!-- LEFT: Compact Horizontal System Bars -->
+      <div
+        class="glass px-2.5 py-2 sm:px-3 sm:py-2.5 md:px-4 md:py-3 flex flex-col gap-1.5 min-w-[125px] sm:min-w-[170px] md:min-w-[230px] flex-1 max-w-[250px]">
+        <div>
+          <div class="flex justify-between text-[10px] sm:text-[11px] font-rajdhani font-600 mb-0.5">
+            <span class="text-red-400 uppercase tracking-wider">Hull</span>
+            <span id="hullText" class="text-red-200">100%</span>
+          </div>
+          <div class="bar-container">
+            <div id="hullBar" class="bar-fill" style="width:100%;background:linear-gradient(90deg,#ff3535,#ff7550)">
+            </div>
+          </div>
+        </div>
+        <div>
+          <div class="flex justify-between text-[10px] sm:text-[11px] font-rajdhani font-600 mb-0.5">
+            <span class="text-cyan-400 uppercase tracking-wider">Shield</span>
+            <span id="shieldText" class="text-cyan-200">100%</span>
+          </div>
+          <div class="bar-container">
+            <div id="shieldBar" class="bar-fill" style="width:100%;background:linear-gradient(90deg,#2095ff,#55d5ff)">
+            </div>
+          </div>
+        </div>
+        <div>
+          <div class="flex justify-between text-[10px] sm:text-[11px] font-rajdhani font-600 mb-0.5">
+            <span class="text-amber-400 uppercase tracking-wider">Nitro</span>
+            <span id="nitroText" class="text-amber-200">100%</span>
+          </div>
+          <div class="bar-container">
+            <div id="nitroBar" class="bar-fill" style="width:100%;background:linear-gradient(90deg,#f09010,#ffd030)">
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- CENTER: Glowing Threat Level Badge -->
+      <div
+        class="glass px-2 py-2 sm:px-3.5 sm:py-2.5 md:px-5 md:py-3 text-center min-w-[140px] sm:min-w-[190px] md:min-w-[260px] flex-1 max-w-[280px]">
+        <div
+          class="text-[9px] sm:text-[10px] font-rajdhani font-600 text-blue-300 uppercase tracking-widest leading-none mb-1">
+          Threat Status</div>
+        <div id="threatName"
+          class="font-orbitron text-[11px] sm:text-xs md:text-sm font-700 glow-text tracking-wide whitespace-nowrap overflow-hidden text-ellipsis">
+          LVL 1 - QUIET VOID</div>
+        <div class="mt-1.5 bar-container" style="height:5px">
+          <div id="threatBar" class="bar-fill" style="width:0%;background:linear-gradient(90deg,#3b82f6,#a855f7)"></div>
+        </div>
+        <div class="flex justify-between text-[9px] sm:text-[10px] text-blue-300/70 mt-1 font-rajdhani leading-none">
+          <span id="rescueCount">0 Rescued</span>
+          <span id="nextLevelText">Next: 3</span>
+        </div>
+      </div>
+
+      <!-- RIGHT: Score Readout + Multiplier Badge -->
+      <div
+        class="glass px-2.5 py-2 sm:px-3 sm:py-2.5 md:px-4 md:py-3 text-right min-w-[110px] sm:min-w-[150px] md:min-w-[210px] flex-1 max-w-[220px]">
+        <div
+          class="text-[9px] sm:text-[10px] font-rajdhani font-600 text-blue-300 uppercase tracking-widest leading-none mb-1">
+          Mission Score</div>
+        <div id="scoreDisplay"
+          class="font-orbitron text-base sm:text-xl md:text-2xl font-900 glow-text text-white leading-tight">0</div>
+        <div class="flex justify-end items-center gap-1.5 sm:gap-2 mt-0.5">
+          <span id="rescueBadge" class="text-[10px] sm:text-[11px] font-rajdhani text-emerald-300">🧑‍🚀 0</span>
+          <span id="pointsBadge"
+            class="text-[10px] sm:text-[11px] font-orbitron text-amber-300 font-700 whitespace-nowrap">+100pts</span>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- MOBILE TOUCH CONTROLS (VIRTUAL 360° JOYSTICK & ACTION BUTTONS) -->
+  <div id="mobileUI">
+    <!-- Bottom-Left Virtual 360° Analog Joystick -->
+    <div id="joystickBase">
+      <div id="joystickKnob"></div>
+      <div class="absolute inset-0 flex items-center justify-center pointer-events-none opacity-20">
+        <div class="w-full h-[1px] bg-blue-300"></div>
+        <div class="h-full w-[1px] bg-blue-300 absolute"></div>
+      </div>
+    </div>
+
+    <!-- Bottom-Right Action Buttons -->
+    <div class="absolute bottom-6 right-5 flex flex-col sm:flex-row gap-3 items-center">
+      <div id="btnBrake" class="touch-action-btn glass"
+        style="background:rgba(20,40,80,0.55);border:2px solid rgba(56,189,248,0.5)">
+        <span class="text-base leading-none">🛑</span>
+        <span class="text-cyan-200 text-[9px] mt-0.5 font-orbitron">BRAKE</span>
+      </div>
+      <div id="btnNitro" class="touch-action-btn glass"
+        style="background:rgba(70,45,15,0.55);border:2px solid rgba(245,158,11,0.6)">
+        <span class="text-base leading-none">⚡</span>
+        <span class="text-amber-300 text-[9px] mt-0.5 font-orbitron">NITRO</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- START & GAME OVER OVERLAYS -->
+  <div id="overlay">
+    <div id="startScreen" class="glass-strong p-6 sm:p-8 md:p-10 max-w-lg w-[92vw] text-center">
+      <h1 class="font-orbitron text-2xl sm:text-3xl font-900 glow-text mb-1 tracking-wider text-white">ZERO-G VOID</h1>
+      <p class="font-orbitron text-xs sm:text-sm text-blue-300/80 tracking-widest mb-5">INFINITE RESCUE</p>
+
+      <div class="text-left text-xs sm:text-sm font-rajdhani text-blue-100/80 space-y-2 mb-5 px-2">
+        <p class="text-blue-300 font-700 uppercase tracking-wider text-xs mb-1">Flight Instructions</p>
+        <p><span class="text-white font-600">Desktop:</span> WASD / Arrow Keys for directional thrust vector.</p>
+        <p><span class="text-white font-600">Mobile:</span> Use the 360° Analog Joystick on the bottom-left.</p>
+        <p><span class="text-amber-300 font-600">Nitro Boost (Shift / ⚡):</span> 2.2× thrust multiplier.</p>
+        <p><span class="text-cyan-300 font-600">Grav Brake (Space / 🛑):</span> Retro dampening halt.</p>
+        <p class="text-purple-300/80 text-[11px] sm:text-xs pt-1">⚠ Avoid jagged space debris and Singularity Black
+          Holes. Threat escalates every 3 rescues!</p>
+      </div>
+
+      <div id="highScoreStart" class="text-xs font-orbitron text-amber-300/80 mb-4 hidden">BEST SCORE: <span
+          id="hsValStart">0</span></div>
+      <button id="btnStart" class="btn-void py-3 px-6 text-xs sm:text-sm font-700 w-full">Enter the Void</button>
+    </div>
+
+    <div id="gameOverScreen" class="glass-strong p-6 sm:p-8 md:p-10 max-w-lg w-[92vw] text-center hidden">
+      <h2 class="font-orbitron text-xl sm:text-2xl font-900 glow-text-warn mb-1 tracking-wider text-red-400">MISSION
+        TERMINATED</h2>
+      <p id="failReason" class="font-rajdhani text-xs sm:text-sm text-red-200/80 mb-4">Drone consumed by the void.</p>
+
+      <div class="glass px-4 py-3 sm:px-5 sm:py-4 mb-4 text-left space-y-1.5 text-xs sm:text-sm font-rajdhani">
+        <div class="flex justify-between"><span class="text-blue-300/70">Final Score</span><span id="goScore"
+            class="font-orbitron text-white font-700">0</span></div>
+        <div class="flex justify-between"><span class="text-blue-300/70">Astronauts Rescued</span><span id="goRescues"
+            class="text-emerald-300 font-600">0</span></div>
+        <div class="flex justify-between"><span class="text-blue-300/70">Highest Threat Level</span><span id="goThreat"
+            class="text-purple-300 font-600">1</span></div>
+        <div id="goNewHigh" class="text-center font-orbitron text-xs text-amber-300 pt-2 hidden animate-pulse-glow">★
+          NEW RECORD HIGH SCORE ★</div>
+      </div>
+
+      <div id="highScoreOver" class="text-xs font-orbitron text-amber-300/80 mb-4 hidden">RECORD: <span
+          id="hsValOver">0</span></div>
+      <button id="btnRestart" class="btn-void py-3 px-6 text-xs sm:text-sm font-700 w-full">Deploy New Drone</button>
+    </div>
+  </div>
+
+  <canvas id="gameCanvas"></canvas>
+
+  <script>
+    // ===================== WEB AUDIO API SYNTH ENGINE =====================
+    const AudioEngine = (() => {
+      let ctx = null;
+      let humOsc = null, humGain = null;
+
+      const init = () => {
+        try {
+          if (!ctx) {
+            const AudioCtx = window.AudioContext || window.webkitAudioContext;
+            if (AudioCtx) ctx = new AudioCtx();
+          }
+          if (ctx && ctx.state === 'suspended') {
+            ctx.resume().catch(() => { });
+          }
+        } catch (e) {
+          console.warn("AudioContext init error:", e);
+        }
+      };
+
+      const isReady = () => ctx && ctx.state === 'running';
+
+      const createGain = (v = 0.25) => {
+        try {
+          if (!isReady()) return null;
+          const g = ctx.createGain();
+          g.gain.value = v;
+          g.connect(ctx.destination);
+          return g;
+        } catch (e) {
+          return null;
+        }
+      };
+
+      const playTone = (freq, dur, type = 'sine', vol = 0.15, detune = 0) => {
+        try {
+          if (!isReady()) return;
+          const g = createGain(0);
+          if (!g) return;
+          const o = ctx.createOscillator();
+          o.type = type;
+          o.frequency.value = freq;
+          if (detune) o.detune.value = detune;
+          o.connect(g);
+          const t = ctx.currentTime;
+          g.gain.setValueAtTime(0, t);
+          g.gain.linearRampToValueAtTime(vol, t + 0.01);
+          g.gain.exponentialRampToValueAtTime(0.001, t + dur);
+          o.start(t);
+          o.stop(t + dur + 0.04);
+        } catch (e) { }
+      };
+
+      const playNoise = (dur, vol = 0.04) => {
+        try {
+          if (!isReady()) return;
+          const bufferSize = Math.max(1, Math.floor(ctx.sampleRate * dur));
+          const buf = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+          const d = buf.getChannelData(0);
+          for (let i = 0; i < d.length; i++) d[i] = (Math.random() * 2 - 1);
+          const s = ctx.createBufferSource();
+          s.buffer = buf;
+          const f = ctx.createBiquadFilter();
+          f.type = 'bandpass';
+          f.frequency.value = 750;
+          f.Q.value = 1.2;
+          const g = createGain(0);
+          if (!g) return;
+          s.connect(f);
+          f.connect(g);
+          const t = ctx.currentTime;
+          g.gain.setValueAtTime(vol, t);
+          g.gain.exponentialRampToValueAtTime(0.001, t + dur);
+          s.start(t);
+          s.stop(t + dur + 0.04);
+        } catch (e) { }
+      };
+
+      const updateHum = (intensity) => {
+        try {
+          if (!isReady()) return;
+          if (!humOsc) {
+            humGain = ctx.createGain();
+            humGain.gain.value = 0;
+            humGain.connect(ctx.destination);
+            humOsc = ctx.createOscillator();
+            humOsc.type = 'sawtooth';
+            humOsc.frequency.value = 40;
+            humOsc.connect(humGain);
+            humOsc.start();
+          }
+          const t = ctx.currentTime;
+          const clamped = Math.max(0, Math.min(1, intensity));
+          humGain.gain.setTargetAtTime(clamped * 0.16, t, 0.08);
+          humOsc.frequency.setTargetAtTime(40 + clamped * 85, t, 0.06);
+        } catch (e) { }
+      };
+
+      const stopHum = () => {
+        try {
+          if (!humGain || !isReady()) return;
+          humGain.gain.setTargetAtTime(0, ctx.currentTime, 0.05);
+        } catch (e) { }
+      };
+
+      return {
+        init,
+        thrust: () => playNoise(0.08, 0.02),
+        nitro: () => { playNoise(0.12, 0.04); playTone(130, 0.1, 'sawtooth', 0.05); },
+        brake: () => playTone(220, 0.14, 'square', 0.05, -50),
+        rescue: () => {
+          playTone(523, 0.1, 'sine', 0.18);
+          setTimeout(() => playTone(659, 0.1, 'sine', 0.2), 90);
+          setTimeout(() => playTone(784, 0.18, 'sine', 0.24), 180);
+        },
+        hit: () => { playNoise(0.22, 0.12); playTone(80, 0.25, 'sawtooth', 0.1); },
+        shieldHit: () => { playTone(320, 0.14, 'triangle', 0.1, 80); playNoise(0.1, 0.06); },
+        levelUp: () => {
+          playTone(440, 0.12, 'sine', 0.15);
+          setTimeout(() => playTone(554, 0.12, 'sine', 0.16), 110);
+          setTimeout(() => playTone(659, 0.12, 'sine', 0.18), 220);
+          setTimeout(() => playTone(880, 0.25, 'triangle', 0.22), 330);
+        },
+        gameOver: () => {
+          playTone(280, 0.25, 'sawtooth', 0.12);
+          setTimeout(() => playTone(180, 0.35, 'sawtooth', 0.1), 220);
+          setTimeout(() => playTone(90, 0.7, 'square', 0.08), 500);
+        },
+        singularityDeath: () => {
+          playTone(35, 1.2, 'sawtooth', 0.22);
+          playTone(55, 1.0, 'square', 0.14, -200);
+          playNoise(0.7, 0.16);
+        },
+        updateSingularityHum: updateHum,
+        stopSingularityHum: stopHum,
+        start: () => {
+          playTone(330, 0.12, 'sine', 0.12);
+          setTimeout(() => playTone(440, 0.12, 'sine', 0.14), 100);
+          setTimeout(() => playTone(660, 0.22, 'triangle', 0.16), 200);
+        }
+      };
+    })();
+
+    // ===================== GAME PARAMETERS & CURVES =====================
+    const MAX_PARTICLES = 50;
+    const MAX_ASTEROIDS = 20;
+    const MAX_BLACKHOLES = 3;
+    const MAX_ASTRONAUTS = 4;
+    const MAX_POPUPS = 8;
+
+    const THREAT_NAMES = [
+      'LVL 1 - QUIET VOID', 'LVL 2 - ASTEROID DRIFT', 'LVL 3 - DEBRIS FIELD',
+      'LVL 4 - SOLAR STORM', 'LVL 5 - DEEP SPACE CHAOS', 'LVL 6 - VOID MAELSTROM',
+      'LVL 7 - SINGULARITY EDGE', 'LVL 8 - EVENT HORIZON', 'LVL 9 - OBLIVION',
+      'LVL 10+ - BEYOND'
+    ];
+
+    // Diminishing returns curve: +100 -> +85 -> +70 -> ... floor of +15
+    const POINTS_PER_LEVEL = [100, 85, 70, 55, 40, 25, 15, 15, 15, 15];
+
+    const canvas = document.getElementById('gameCanvas');
+    const C = canvas.getContext('2d');
+    let W = window.innerWidth, H = window.innerHeight;
+
+    const resize = () => {
+      W = canvas.width = window.innerWidth;
+      H = canvas.height = window.innerHeight;
+    };
+    window.addEventListener('resize', resize);
+    resize();
+
+    let game = null;
+    let highScore = 0;
+    try {
+      highScore = parseInt(localStorage.getItem('zgv_highscore') || '0', 10) || 0;
+    } catch (e) {
+      highScore = 0;
+    }
+
+    function newGame() {
+      return {
+        running: false,
+        over: false,
+        time: 0,
+        ship: { x: 0, y: 0, vx: 0, vy: 0, angle: 0, radius: 14 },
+        hull: 100,
+        shield: 100,
+        nitro: 100,
+        score: 0,
+        rescues: 0,
+        threatLevel: 1,
+        astronauts: [],
+        asteroids: [],
+        blackholes: [],
+        particles: [],
+        scorePopups: [],
+        camera: { x: 0, y: 0 },
+        stars: generateStars(220),
+        starsDeep: generateStars(130),
+        braking: false,
+        boosting: false,
+        shieldRegenDelay: 0,
+        invincibleTimer: 0,
+        screenShake: 0,
+        thrustSndCd: 0,
+        nitroSndCd: 0,
+        singularityDeathReason: null
+      };
+    }
+
+    function generateStars(n) {
+      const s = [];
+      for (let i = 0; i < n; i++) {
+        s.push({
+          x: Math.random() * 6000 - 3000,
+          y: Math.random() * 6000 - 3000,
+          r: Math.random() * 1.5 + 0.3,
+          b: Math.random() * 0.5 + 0.5
+        });
+      }
+      return s;
+    }
+
+    // ===================== MULTI-INPUT HANDLING =====================
+    const keys = {};
+    window.addEventListener('keydown', e => {
+      keys[e.code] = true;
+      if (['Space', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'ShiftLeft', 'ShiftRight'].includes(e.code)) {
+        e.preventDefault();
+      }
+    });
+    window.addEventListener('keyup', e => {
+      keys[e.code] = false;
+    });
+
+    // Mobile Action Touch Buttons
+    let touchBrake = false;
+    let touchNitro = false;
+    const btnBrake = document.getElementById('btnBrake');
+    const btnNitro = document.getElementById('btnNitro');
+
+    if (btnBrake) {
+      btnBrake.addEventListener('touchstart', e => { e.preventDefault(); touchBrake = true; }, { passive: false });
+      btnBrake.addEventListener('touchend', e => { e.preventDefault(); touchBrake = false; }, { passive: false });
+      btnBrake.addEventListener('touchcancel', e => { e.preventDefault(); touchBrake = false; }, { passive: false });
+      btnBrake.addEventListener('mousedown', e => { e.preventDefault(); touchBrake = true; });
+      btnBrake.addEventListener('mouseup', e => { e.preventDefault(); touchBrake = false; });
+    }
+
+    if (btnNitro) {
+      btnNitro.addEventListener('touchstart', e => { e.preventDefault(); touchNitro = true; }, { passive: false });
+      btnNitro.addEventListener('touchend', e => { e.preventDefault(); touchNitro = false; }, { passive: false });
+      btnNitro.addEventListener('touchcancel', e => { e.preventDefault(); touchNitro = false; }, { passive: false });
+      btnNitro.addEventListener('mousedown', e => { e.preventDefault(); touchNitro = true; });
+      btnNitro.addEventListener('mouseup', e => { e.preventDefault(); touchNitro = false; });
+    }
+
+    // Virtual 360° Analog Joystick
+    const joystick = {
+      active: false,
+      touchId: null,
+      centerX: 0,
+      centerY: 0,
+      dx: 0,
+      dy: 0,
+      maxRadius: 42
+    };
+
+    const joystickBase = document.getElementById('joystickBase');
+    const joystickKnob = document.getElementById('joystickKnob');
+
+    function updateJoystickPuck(px, py) {
+      if (joystickKnob) {
+        joystickKnob.style.transform = `translate(${px}px, ${py}px)`;
+      }
+    }
+
+    function handleJoystickStart(touch) {
+      const rect = joystickBase.getBoundingClientRect();
+      joystick.centerX = rect.left + rect.width / 2;
+      joystick.centerY = rect.top + rect.height / 2;
+      joystick.touchId = touch.identifier;
+      joystick.active = true;
+      handleJoystickMove(touch);
+    }
+
+    function handleJoystickMove(touch) {
+      if (!joystick.active) return;
+      const rawDx = touch.clientX - joystick.centerX;
+      const rawDy = touch.clientY - joystick.centerY;
+      const dist = Math.hypot(rawDx, rawDy);
+      const clampedDist = Math.min(dist, joystick.maxRadius);
+      const angle = Math.atan2(rawDy, rawDx);
+
+      const puckX = Math.cos(angle) * clampedDist;
+      const puckY = Math.sin(angle) * clampedDist;
+      updateJoystickPuck(puckX, puckY);
+
+      if (dist > 5) {
+        joystick.dx = puckX / joystick.maxRadius;
+        joystick.dy = puckY / joystick.maxRadius;
+      } else {
+        joystick.dx = 0;
+        joystick.dy = 0;
+      }
+    }
+
+    function resetJoystick() {
+      joystick.active = false;
+      joystick.touchId = null;
+      joystick.dx = 0;
+      joystick.dy = 0;
+      updateJoystickPuck(0, 0);
+    }
+
+    if (joystickBase) {
+      joystickBase.addEventListener('touchstart', e => {
+        e.preventDefault();
+        if (!joystick.active && e.changedTouches.length > 0) {
+          handleJoystickStart(e.changedTouches[0]);
+        }
+      }, { passive: false });
+
+      window.addEventListener('touchmove', e => {
+        if (!joystick.active) return;
+        for (let i = 0; i < e.changedTouches.length; i++) {
+          if (e.changedTouches[i].identifier === joystick.touchId) {
+            handleJoystickMove(e.changedTouches[i]);
+            break;
+          }
+        }
+      }, { passive: false });
+
+      const endJoystickTouch = e => {
+        if (!joystick.active) return;
+        for (let i = 0; i < e.changedTouches.length; i++) {
+          if (e.changedTouches[i].identifier === joystick.touchId) {
+            resetJoystick();
+            break;
+          }
+        }
+      };
+
+      window.addEventListener('touchend', endJoystickTouch, { passive: false });
+      window.addEventListener('touchcancel', endJoystickTouch, { passive: false });
+    }
+
+    // ===================== PROCEDURAL GENERATION =====================
+    function createAsteroid(x, y, sizeMin, sizeMax, speedMul) {
+      const r = Math.random() * (sizeMax - sizeMin) + sizeMin;
+      const verts = [];
+      const n = Math.floor(Math.random() * 4) + 7;
+      for (let i = 0; i < n; i++) {
+        const a = (i / n) * Math.PI * 2;
+        const jr = r * (0.68 + Math.random() * 0.45);
+        verts.push({ x: Math.cos(a) * jr, y: Math.sin(a) * jr });
+      }
+      const craters = [];
+      const nc = Math.floor(Math.random() * 2) + 1;
+      for (let i = 0; i < nc; i++) {
+        const ca = Math.random() * Math.PI * 2;
+        const cd = Math.random() * r * 0.45;
+        craters.push({ x: Math.cos(ca) * cd, y: Math.sin(ca) * cd, r: Math.random() * r * 0.2 + 2 });
+      }
+      const speed = (Math.random() * 35 + 20) * speedMul;
+      const dir = Math.random() * Math.PI * 2;
+      return {
+        x: Number.isFinite(x) ? x : 0,
+        y: Number.isFinite(y) ? y : 0,
+        r: r,
+        verts: verts,
+        craters: craters,
+        angle: Math.random() * Math.PI * 2,
+        rotSpeed: (Math.random() - 0.5) * 1.5 * speedMul,
+        vx: Math.cos(dir) * speed,
+        vy: Math.sin(dir) * speed,
+        color: `hsl(${Math.random() * 30 + 15}, ${Math.random() * 15 + 10}%, ${Math.random() * 15 + 22}%)`
+      };
+    }
+
+    function createAstronaut(x, y) {
+      return {
+        x: Number.isFinite(x) ? x : 0,
+        y: Number.isFinite(y) ? y : 0,
+        angle: Math.random() * Math.PI * 2,
+        rotSpeed: (Math.random() - 0.5) * 1.2,
+        pulse: Math.random() * Math.PI * 2,
+        bobPhase: Math.random() * Math.PI * 2,
+        radius: 12
+      };
+    }
+
+    function createBlackhole(x, y) {
+      return {
+        type: 'blackhole',
+        x: Number.isFinite(x) ? x : 0,
+        y: Number.isFinite(y) ? y : 0,
+        radius: 35,
+        eventHorizon: 280,
+        pullForce: 380,
+        pulseAngle: Math.random() * Math.PI * 2,
+        vx: (Math.random() - 0.5) * 6,
+        vy: (Math.random() - 0.5) * 6
+      };
+    }
+
+    function spawnAstronautAround(g) {
+      const a = Math.random() * Math.PI * 2;
+      const d = 500 + Math.random() * 400;
+      return createAstronaut(g.ship.x + Math.cos(a) * d, g.ship.y + Math.sin(a) * d);
+    }
+
+    function spawnAsteroidAround(g) {
+      const a = Math.random() * Math.PI * 2;
+      const d = 600 + Math.random() * 500;
+      const lvl = Math.max(1, g.threatLevel);
+      const sizeMin = 18 + Math.min(lvl, 10) * 2;
+      const sizeMax = 38 + Math.min(lvl, 10) * 4;
+      const speedMul = 0.6 + Math.min(lvl, 10) * 0.22;
+      return createAsteroid(g.ship.x + Math.cos(a) * d, g.ship.y + Math.sin(a) * d, sizeMin, sizeMax, speedMul);
+    }
+
+    function spawnBlackholeAround(g) {
+      const shipAngle = g.ship.angle || 0;
+      const offset = (Math.random() * 240 + 60) * Math.PI / 180;
+      const a = shipAngle + offset;
+      const d = 750 + Math.random() * 450;
+      const bx = g.ship.x + Math.cos(a) * d;
+      const by = g.ship.y + Math.sin(a) * d;
+      for (let i = 0; i < g.blackholes.length; i++) {
+        const bh = g.blackholes[i];
+        const ddx = bh.x - bx, ddy = bh.y - by;
+        if (ddx * ddx + ddy * ddy < 360000) return null;
+      }
+      return createBlackhole(bx, by);
+    }
+
+    function addParticle(g, p) {
+      if (g.particles.length >= MAX_PARTICLES) {
+        g.particles.shift();
+      }
+      g.particles.push(p);
+    }
+
+    function spawnParticles(g, x, y, count, color, speed, life, size) {
+      const safeCount = Math.min(count, 15);
+      for (let i = 0; i < safeCount; i++) {
+        const a = Math.random() * Math.PI * 2;
+        const s = Math.random() * speed;
+        addParticle(g, {
+          x, y,
+          vx: Math.cos(a) * s,
+          vy: Math.sin(a) * s,
+          life, maxLife: life,
+          color,
+          size: Math.random() * size + 1
+        });
+      }
+    }
+
+    // ===================== GAME PHYSICS & UPDATE =====================
+    function update(g, dt) {
+      if (!g || !g.running || g.over) return;
+
+      if (!Number.isFinite(dt) || dt <= 0) dt = 0.016;
+      g.time += dt;
+
+      const ship = g.ship;
+      if (!Number.isFinite(ship.x) || !Number.isFinite(ship.y)) {
+        ship.x = 0; ship.y = 0; ship.vx = 0; ship.vy = 0;
+      }
+
+      // --- Input vector combination (Keyboard + Virtual Joystick) ---
+      let tx = 0, ty = 0;
+      if (keys['KeyW'] || keys['ArrowUp']) ty -= 1;
+      if (keys['KeyS'] || keys['ArrowDown']) ty += 1;
+      if (keys['KeyA'] || keys['ArrowLeft']) tx -= 1;
+      if (keys['KeyD'] || keys['ArrowRight']) tx += 1;
+
+      if (joystick.active && (joystick.dx !== 0 || joystick.dy !== 0)) {
+        tx = joystick.dx;
+        ty = joystick.dy;
+      }
+
+      const hasThrust = (tx !== 0 || ty !== 0);
+      const isBoosting = Boolean((keys['ShiftLeft'] || keys['ShiftRight'] || touchNitro) && g.nitro > 0);
+      const isBraking = Boolean(keys['Space'] || touchBrake);
+      g.braking = isBraking;
+      g.boosting = isBoosting && hasThrust;
+
+      // --- Thrust & Direction ---
+      if (hasThrust) {
+        const lenSq = tx * tx + ty * ty;
+        if (lenSq > 0) {
+          const len = Math.sqrt(lenSq);
+          ship.angle = Math.atan2(ty, tx);
+          let thrust = 280;
+          if (isBoosting) {
+            thrust *= 2.2;
+            g.nitro = Math.max(0, g.nitro - 30 * dt);
+          }
+          ship.vx += (tx / len) * thrust * dt;
+          ship.vy += (ty / len) * thrust * dt;
+
+          // Thruster trail particles
+          if (Math.random() < 0.6) {
+            const ex = ship.x - Math.cos(ship.angle) * 16;
+            const ey = ship.y - Math.sin(ship.angle) * 16;
+            const sa = ship.angle + Math.PI + (Math.random() - 0.5) * 0.8;
+            const sp = Math.random() * 100 + 50;
+            addParticle(g, {
+              x: ex + (Math.random() - 0.5) * 4,
+              y: ey + (Math.random() - 0.5) * 4,
+              vx: Math.cos(sa) * sp + ship.vx * 0.3,
+              vy: Math.sin(sa) * sp + ship.vy * 0.3,
+              life: 0.3, maxLife: 0.3,
+              color: isBoosting ? '#ffa020' : '#40a0ff',
+              size: Math.random() * 2.5 + 1
+            });
+          }
+
+          g.thrustSndCd -= dt;
+          if (g.thrustSndCd <= 0) { AudioEngine.thrust(); g.thrustSndCd = 0.12; }
+          if (isBoosting) {
+            g.nitroSndCd -= dt;
+            if (g.nitroSndCd <= 0) { AudioEngine.nitro(); g.nitroSndCd = 0.18; }
+          }
+        }
+      }
+
+      // --- Gravitational Retro-Brake ---
+      if (isBraking) {
+        const decay = Math.pow(0.05, dt);
+        ship.vx *= decay;
+        ship.vy *= decay;
+        if (Math.random() < 0.3) {
+          spawnParticles(g, ship.x, ship.y, 1, '#60d0ff', 40, 0.2, 2);
+        }
+      }
+
+      // --- Passive Drift Drag & Speed Cap ---
+      const drag = Math.pow(0.992, dt * 60);
+      ship.vx *= drag;
+      ship.vy *= drag;
+
+      const spdSq = ship.vx * ship.vx + ship.vy * ship.vy;
+      const maxSpd = 500;
+      if (spdSq > maxSpd * maxSpd) {
+        const spd = Math.sqrt(spdSq);
+        ship.vx = (ship.vx / spd) * maxSpd;
+        ship.vy = (ship.vy / spd) * maxSpd;
+      }
+
+      ship.x += ship.vx * dt;
+      ship.y += ship.vy * dt;
+
+      // --- Nitro & Shield Regeneration ---
+      if (!isBoosting) g.nitro = Math.min(100, g.nitro + 12 * dt);
+      g.shieldRegenDelay = Math.max(0, g.shieldRegenDelay - dt);
+      if (g.shieldRegenDelay <= 0) g.shield = Math.min(100, g.shield + 8 * dt);
+      g.invincibleTimer = Math.max(0, g.invincibleTimer - dt);
+      g.screenShake *= Math.pow(0.02, dt);
+
+      // --- Camera Centering ---
+      const camSmooth = 1 - Math.pow(0.001, dt);
+      g.camera.x += (ship.x - g.camera.x) * camSmooth;
+      g.camera.y += (ship.y - g.camera.y) * camSmooth;
+
+      // --- Entity Spawning Limits ---
+      const targetAstronauts = Math.min(2 + Math.floor(g.threatLevel * 0.3), MAX_ASTRONAUTS);
+      while (g.astronauts.length < targetAstronauts) {
+        g.astronauts.push(spawnAstronautAround(g));
+      }
+
+      const targetAsteroids = Math.min(6 + g.threatLevel * 2, MAX_ASTEROIDS);
+      while (g.asteroids.length < targetAsteroids) {
+        g.asteroids.push(spawnAsteroidAround(g));
+      }
+
+      if (g.threatLevel >= 2) {
+        const targetBH = Math.min(Math.floor((g.threatLevel - 1) * 0.5) + 1, MAX_BLACKHOLES);
+        while (g.blackholes.length < targetBH) {
+          const bh = spawnBlackholeAround(g);
+          if (bh) g.blackholes.push(bh);
+          else break;
+        }
+      }
+
+      // --- Update Astronauts ---
+      for (let i = 0; i < g.astronauts.length; i++) {
+        const a = g.astronauts[i];
+        a.angle += a.rotSpeed * dt;
+        a.pulse += dt * 3;
+        a.bobPhase += dt * 2;
+      }
+
+      // --- Update Asteroids ---
+      for (let i = 0; i < g.asteroids.length; i++) {
+        const a = g.asteroids[i];
+        a.x += a.vx * dt;
+        a.y += a.vy * dt;
+        a.angle += a.rotSpeed * dt;
+      }
+
+      // --- Singularity Gravitational Engine ---
+      let maxHumIntensity = 0;
+      for (let i = 0; i < g.blackholes.length; i++) {
+        const bh = g.blackholes[i];
+        bh.pulseAngle += dt * 3;
+        bh.x += bh.vx * dt;
+        bh.y += bh.vy * dt;
+
+        const dx = bh.x - ship.x;
+        const dy = bh.y - ship.y;
+        const distSq = dx * dx + dy * dy;
+        const ehSq = bh.eventHorizon * bh.eventHorizon;
+
+        if (distSq < ehSq && distSq > 25) {
+          const dist = Math.sqrt(distSq);
+          const pullStrength = (1 - dist / bh.eventHorizon) * bh.pullForce;
+          ship.vx += (dx / dist) * pullStrength * dt;
+          ship.vy += (dy / dist) * pullStrength * dt;
+
+          const intensity = 1 - dist / bh.eventHorizon;
+          if (intensity > maxHumIntensity) maxHumIntensity = intensity;
+
+          if (Math.random() < intensity * 0.4) {
+            const pa = Math.atan2(dy, dx);
+            addParticle(g, {
+              x: ship.x + (Math.random() - 0.5) * 20,
+              y: ship.y + (Math.random() - 0.5) * 20,
+              vx: Math.cos(pa) * 50 * intensity,
+              vy: Math.sin(pa) * 50 * intensity,
+              life: 0.3, maxLife: 0.3,
+              color: intensity > 0.6 ? '#c084fc' : '#a855f7',
+              size: Math.random() * 2 + 0.5
+            });
+          }
+        }
+
+        // Event Horizon Instant Collapse
+        const deathRadius = bh.radius + ship.radius * 0.5;
+        if (distSq < deathRadius * deathRadius) {
+          g.singularityDeathReason = 'CONSUMED BY THE VOID SINGULARITY';
+          g.over = true;
+          g.running = false;
+          AudioEngine.singularityDeath();
+          AudioEngine.stopSingularityHum();
+          spawnParticles(g, bh.x, bh.y, 25, '#c084fc', 120, 0.7, 3);
+          showGameOver(g);
+          return;
+        }
+
+        // Pull Asteroids into Black Hole
+        for (let j = 0; j < g.asteroids.length; j++) {
+          const ast = g.asteroids[j];
+          const adx = bh.x - ast.x;
+          const ady = bh.y - ast.y;
+          const adistSq = adx * adx + ady * ady;
+          if (adistSq < ehSq && adistSq > 25) {
+            const adist = Math.sqrt(adistSq);
+            const aPull = (1 - adist / bh.eventHorizon) * bh.pullForce * 0.5;
+            ast.vx += (adx / adist) * aPull * dt;
+            ast.vy += (ady / adist) * aPull * dt;
+          }
+          const consumeRadius = bh.radius * 1.2;
+          if (adistSq < consumeRadius * consumeRadius) {
+            spawnParticles(g, ast.x, ast.y, 6, '#a855f7', 60, 0.3, 2);
+            ast._consumed = true;
+          }
+        }
+      }
+
+      if (g.asteroids.some(a => a._consumed)) {
+        g.asteroids = g.asteroids.filter(a => !a._consumed);
+      }
+
+      if (maxHumIntensity > 0.01) {
+        AudioEngine.updateSingularityHum(maxHumIntensity);
+      } else {
+        AudioEngine.stopSingularityHum();
+      }
+
+      // --- Rescue Astronauts (Diminishing Curve) ---
+      for (let i = g.astronauts.length - 1; i >= 0; i--) {
+        const a = g.astronauts[i];
+        const dx = a.x - ship.x, dy = a.y - ship.y;
+        const distSq = dx * dx + dy * dy;
+        const hitR = ship.radius + a.radius + 6;
+        if (distSq < hitR * hitR) {
+          g.rescues++;
+          const ptsIdx = Math.min(Math.max(0, g.threatLevel - 1), POINTS_PER_LEVEL.length - 1);
+          const pts = POINTS_PER_LEVEL[ptsIdx];
+          g.score += pts;
+
+          if (g.scorePopups.length >= MAX_POPUPS) g.scorePopups.shift();
+          g.scorePopups.push({ x: a.x, y: a.y, text: `+${pts}`, life: 1.2, maxLife: 1.2, color: '#40ff80' });
+
+          spawnParticles(g, a.x, a.y, 15, '#40ffa0', 90, 0.5, 3);
+          AudioEngine.rescue();
+          g.astronauts.splice(i, 1);
+
+          // Threat advancement every 3 rescues
+          const rescuesForNext = g.threatLevel * 3;
+          if (g.rescues >= rescuesForNext) {
+            g.threatLevel = Math.min(g.threatLevel + 1, 10);
+            AudioEngine.levelUp();
+            const tIdx = Math.min(g.threatLevel - 1, THREAT_NAMES.length - 1);
+            if (g.scorePopups.length >= MAX_POPUPS) g.scorePopups.shift();
+            g.scorePopups.push({ x: ship.x, y: ship.y - 40, text: THREAT_NAMES[tIdx], life: 2.2, maxLife: 2.2, color: '#c084fc' });
+          }
+        }
+      }
+
+      // --- Asteroid Collision Check ---
+      if (g.invincibleTimer <= 0) {
+        for (let i = 0; i < g.asteroids.length; i++) {
+          const a = g.asteroids[i];
+          const dx = a.x - ship.x, dy = a.y - ship.y;
+          const distSq = dx * dx + dy * dy;
+          const hitR = ship.radius + a.r * 0.7;
+          if (distSq < hitR * hitR) {
+            const dist = Math.sqrt(distSq) || 1;
+            const dmg = 8 + g.threatLevel * 2;
+            if (g.shield > 0) {
+              g.shield = Math.max(0, g.shield - dmg * 1.5);
+              AudioEngine.shieldHit();
+              spawnParticles(g, ship.x, ship.y, 8, '#40c0ff', 100, 0.3, 2);
+            } else {
+              g.hull = Math.max(0, g.hull - dmg);
+              AudioEngine.hit();
+              spawnParticles(g, ship.x, ship.y, 12, '#ff4040', 120, 0.4, 3);
+            }
+
+            g.shieldRegenDelay = 2.5;
+            g.invincibleTimer = 0.4;
+            g.screenShake = 8;
+
+            const nx = dx / dist, ny = dy / dist;
+            ship.vx -= nx * 120;
+            ship.vy -= ny * 120;
+
+            if (g.hull <= 0) {
+              g.over = true;
+              g.running = false;
+              AudioEngine.gameOver();
+              AudioEngine.stopSingularityHum();
+              spawnParticles(g, ship.x, ship.y, 25, '#ff6030', 150, 0.7, 4);
+              showGameOver(g);
+            }
+            break;
+          }
+        }
+      }
+
+      // --- Particles & Popups update ---
+      for (let i = g.particles.length - 1; i >= 0; i--) {
+        const p = g.particles[i];
+        p.x += p.vx * dt;
+        p.y += p.vy * dt;
+        p.life -= dt;
+        if (p.life <= 0) g.particles.splice(i, 1);
+      }
+
+      for (let i = g.scorePopups.length - 1; i >= 0; i--) {
+        const sp = g.scorePopups[i];
+        sp.life -= dt;
+        if (sp.life <= 0) g.scorePopups.splice(i, 1);
+      }
+
+      // --- Boundary Pruning ---
+      const cullDistSq = 1400 * 1400;
+      g.asteroids = g.asteroids.filter(a => {
+        if (!Number.isFinite(a.x) || !Number.isFinite(a.y)) return false;
+        const dx = a.x - ship.x, dy = a.y - ship.y;
+        return (dx * dx + dy * dy) < cullDistSq;
+      });
+
+      g.astronauts = g.astronauts.filter(a => {
+        if (!Number.isFinite(a.x) || !Number.isFinite(a.y)) return false;
+        const dx = a.x - ship.x, dy = a.y - ship.y;
+        return (dx * dx + dy * dy) < cullDistSq;
+      });
+
+      const bhCullDistSq = 1800 * 1800;
+      g.blackholes = g.blackholes.filter(bh => {
+        if (!Number.isFinite(bh.x) || !Number.isFinite(bh.y)) return false;
+        const dx = bh.x - ship.x, dy = bh.y - ship.y;
+        return (dx * dx + dy * dy) < bhCullDistSq;
+      });
+
+      // --- Parallax Stars Wrapping ---
+      const wrapStars = (stars, parallax) => {
+        for (let i = 0; i < stars.length; i++) {
+          const s = stars[i];
+          let sx = s.x - g.camera.x * parallax;
+          let sy = s.y - g.camera.y * parallax;
+          if (sx < -3000) s.x += 6000;
+          else if (sx > 3000) s.x -= 6000;
+          if (sy < -3000) s.y += 6000;
+          else if (sy > 3000) s.y -= 6000;
+        }
+      };
+      wrapStars(g.stars, 0.3);
+      wrapStars(g.starsDeep, 0.12);
+
+      updateHUD(g);
+    }
+
+    // ===================== RENDERING PIPELINE =====================
+    function render(g) {
+      C.setTransform(1, 0, 0, 1, 0, 0);
+      C.clearRect(0, 0, W, H);
+
+      // Deep Space Radial Glow
+      const bgGrad = C.createRadialGradient(W / 2, H / 2, 0, W / 2, H / 2, Math.max(W, H) * 0.7);
+      bgGrad.addColorStop(0, '#0a0e1c');
+      bgGrad.addColorStop(0.5, '#050814');
+      bgGrad.addColorStop(1, '#020408');
+      C.fillStyle = bgGrad;
+      C.fillRect(0, 0, W, H);
+
+      let shakeX = 0, shakeY = 0;
+      if (g.screenShake > 0.5) {
+        shakeX = (Math.random() - 0.5) * g.screenShake * 2;
+        shakeY = (Math.random() - 0.5) * g.screenShake * 2;
+      }
+
+      C.save();
+      try {
+        C.translate(W / 2 + shakeX, H / 2 + shakeY);
+
+        // Deep Parallax Stars
+        for (let i = 0; i < g.starsDeep.length; i++) {
+          const s = g.starsDeep[i];
+          const sx = s.x - g.camera.x * 0.12;
+          const sy = s.y - g.camera.y * 0.12;
+          C.globalAlpha = s.b * 0.35;
+          C.fillStyle = '#6080c0';
+          C.beginPath();
+          C.arc(sx, sy, s.r * 0.7, 0, Math.PI * 2);
+          C.fill();
+        }
+
+        // Near Parallax Stars
+        for (let i = 0; i < g.stars.length; i++) {
+          const s = g.stars[i];
+          const sx = s.x - g.camera.x * 0.3;
+          const sy = s.y - g.camera.y * 0.3;
+          C.globalAlpha = Math.min(1, Math.max(0, s.b * 0.6 + Math.sin(g.time * 2 + s.x) * 0.1));
+          C.fillStyle = '#a0c0e0';
+          C.beginPath();
+          C.arc(sx, sy, s.r, 0, Math.PI * 2);
+          C.fill();
+        }
+        C.globalAlpha = 1;
+
+        const cx = g.camera.x, cy = g.camera.y;
+
+        // --- Render Asteroids ---
+        for (let i = 0; i < g.asteroids.length; i++) {
+          const a = g.asteroids[i];
+          const ax = a.x - cx, ay = a.y - cy;
+          if (Math.abs(ax) > W / 2 + a.r + 20 || Math.abs(ay) > H / 2 + a.r + 20) continue;
+
+          C.save();
+          try {
+            C.translate(ax, ay);
+            C.rotate(a.angle);
+            C.beginPath();
+            if (a.verts && a.verts.length > 0) {
+              C.moveTo(a.verts[0].x, a.verts[0].y);
+              for (let v = 1; v < a.verts.length; v++) {
+                C.lineTo(a.verts[v].x, a.verts[v].y);
+              }
+              C.closePath();
+              C.fillStyle = a.color;
+              C.fill();
+              C.strokeStyle = 'rgba(180,160,140,0.3)';
+              C.lineWidth = 1.5;
+              C.stroke();
+            }
+
+            if (a.craters) {
+              for (let c = 0; c < a.craters.length; c++) {
+                const cr = a.craters[c];
+                C.beginPath();
+                C.arc(cr.x, cr.y, cr.r, 0, Math.PI * 2);
+                C.fillStyle = 'rgba(0,0,0,0.25)';
+                C.fill();
+                C.strokeStyle = 'rgba(100,80,60,0.2)';
+                C.lineWidth = 0.8;
+                C.stroke();
+              }
+            }
+          } finally {
+            C.restore();
+          }
+        }
+
+        // --- Render Black Hole Singularities ---
+        for (let i = 0; i < g.blackholes.length; i++) {
+          const bh = g.blackholes[i];
+          const bx = bh.x - cx, by = bh.y - cy;
+          if (Math.abs(bx) > W / 2 + bh.eventHorizon + 20 || Math.abs(by) > H / 2 + bh.eventHorizon + 20) continue;
+
+          C.save();
+          try {
+            C.translate(bx, by);
+
+            // Accretion Radial Gradient
+            const accGrad = C.createRadialGradient(0, 0, bh.radius * 0.8, 0, 0, bh.eventHorizon);
+            accGrad.addColorStop(0, 'rgba(168,85,247,0.2)');
+            accGrad.addColorStop(0.3, 'rgba(139,92,246,0.12)');
+            accGrad.addColorStop(0.6, 'rgba(56,189,248,0.06)');
+            accGrad.addColorStop(1, 'rgba(3,7,18,0)');
+            C.beginPath();
+            C.arc(0, 0, bh.eventHorizon, 0, Math.PI * 2);
+            C.fillStyle = accGrad;
+            C.fill();
+
+            // Spiral accretion trails
+            for (let s = 0; s < 4; s++) {
+              const sAngle = bh.pulseAngle * 0.5 + (s / 4) * Math.PI * 2;
+              C.save();
+              try {
+                C.rotate(sAngle);
+                C.beginPath();
+                for (let t = 0; t < 30; t++) {
+                  const frac = t / 30;
+                  const r = bh.radius * 1.3 + frac * (bh.eventHorizon * 0.65 - bh.radius);
+                  const spiral = frac * Math.PI * 1.8;
+                  const sx = Math.cos(spiral) * r;
+                  const sy = Math.sin(spiral) * r;
+                  if (t === 0) C.moveTo(sx, sy);
+                  else C.lineTo(sx, sy);
+                }
+                C.strokeStyle = `rgba(168,85,247,${0.1 + Math.sin(bh.pulseAngle + s) * 0.04})`;
+                C.lineWidth = 2.5;
+                C.stroke();
+              } finally {
+                C.restore();
+              }
+            }
+
+            // Dashed glowing event horizon border
+            C.save();
+            try {
+              C.rotate(bh.pulseAngle);
+              C.beginPath();
+              C.arc(0, 0, bh.radius + 4, 0, Math.PI * 2);
+              C.setLineDash([8, 12]);
+              C.strokeStyle = '#c084fc';
+              C.lineWidth = 2.5;
+              C.stroke();
+              C.setLineDash([]);
+            } finally {
+              C.restore();
+            }
+
+            // Dark Central Core
+            C.beginPath();
+            C.arc(0, 0, bh.radius, 0, Math.PI * 2);
+            C.fillStyle = '#000000';
+            C.fill();
+            C.strokeStyle = '#a855f7';
+            C.lineWidth = 2.2;
+            C.stroke();
+          } finally {
+            C.restore();
+          }
+        }
+
+        // --- Render Astronauts ---
+        for (let i = 0; i < g.astronauts.length; i++) {
+          const a = g.astronauts[i];
+          const ax = a.x - cx, ay = a.y - cy;
+          if (Math.abs(ax) > W / 2 + 30 || Math.abs(ay) > H / 2 + 30) continue;
+
+          const bob = Math.sin(a.bobPhase) * 3;
+          C.save();
+          try {
+            C.translate(ax, ay + bob);
+            C.rotate(a.angle);
+
+            // Helmet & Visor
+            C.beginPath();
+            C.arc(0, -4, 7, 0, Math.PI * 2);
+            C.fillStyle = '#e0e8f0';
+            C.fill();
+
+            C.beginPath();
+            C.arc(1, -4, 4.5, -0.5, 1.2);
+            C.fillStyle = 'rgba(60,180,255,0.7)';
+            C.fill();
+
+            // Suit & Pack
+            C.fillStyle = '#c0c8d0';
+            C.fillRect(-5, 2, 10, 10);
+            C.fillStyle = '#8090a0';
+            C.fillRect(-7, 3, 3, 7);
+            C.fillStyle = '#a0a8b0';
+            C.fillRect(-4, 12, 3, 5);
+            C.fillRect(1, 12, 3, 5);
+          } finally {
+            C.restore();
+          }
+
+          // Distress pulse beacon
+          const pulseAlpha = Math.max(0, 0.3 + Math.sin(a.pulse) * 0.3);
+          C.beginPath();
+          C.arc(ax, ay, 18 + Math.sin(a.pulse) * 4, 0, Math.PI * 2);
+          C.strokeStyle = `rgba(60,255,140,${pulseAlpha})`;
+          C.lineWidth = 1.5;
+          C.stroke();
+        }
+
+        // --- Render Particles ---
+        for (let i = 0; i < g.particles.length; i++) {
+          const p = g.particles[i];
+          const px = p.x - cx, py = p.y - cy;
+          const alpha = Math.max(0, Math.min(1, p.life / p.maxLife));
+          C.globalAlpha = alpha;
+          C.fillStyle = p.color;
+          C.beginPath();
+          C.arc(px, py, Math.max(0.5, p.size * alpha), 0, Math.PI * 2);
+          C.fill();
+        }
+        C.globalAlpha = 1;
+
+        // --- Render Player Drone ---
+        if (!g.over) {
+          const sx = g.ship.x - cx, sy = g.ship.y - cy;
+          C.save();
+          try {
+            C.translate(sx, sy);
+            C.rotate(g.ship.angle);
+
+            if (g.invincibleTimer > 0 && Math.sin(g.time * 30) > 0) {
+              C.globalAlpha = 0.5;
+            }
+
+            // Cyan Energy Shield Bubble
+            if (g.shield > 15) {
+              C.beginPath();
+              C.arc(0, 0, 20, 0, Math.PI * 2);
+              C.strokeStyle = `rgba(60,180,255,${g.shield / 350})`;
+              C.lineWidth = 1.6;
+              C.stroke();
+            }
+
+            // Sleek Directional Drone Body
+            C.beginPath();
+            C.moveTo(18, 0);
+            C.lineTo(-10, -10);
+            C.lineTo(-6, -3);
+            C.lineTo(-14, -2);
+            C.lineTo(-14, 2);
+            C.lineTo(-6, 3);
+            C.lineTo(-10, 10);
+            C.closePath();
+
+            const shipGrad = C.createLinearGradient(-14, 0, 18, 0);
+            shipGrad.addColorStop(0, '#152540');
+            shipGrad.addColorStop(0.5, '#28456c');
+            shipGrad.addColorStop(1, '#4585c5');
+            C.fillStyle = shipGrad;
+            C.fill();
+            C.strokeStyle = 'rgba(100,180,255,0.6)';
+            C.lineWidth = 1.2;
+            C.stroke();
+
+            // Cockpit Glow
+            C.beginPath();
+            C.arc(6, 0, 4, 0, Math.PI * 2);
+            const cockpitGrad = C.createRadialGradient(6, 0, 0, 6, 0, 5);
+            cockpitGrad.addColorStop(0, 'rgba(80,210,255,0.95)');
+            cockpitGrad.addColorStop(0.7, 'rgba(30,130,255,0.5)');
+            cockpitGrad.addColorStop(1, 'rgba(10,50,200,0)');
+            C.fillStyle = cockpitGrad;
+            C.fill();
+          } finally {
+            C.restore();
+          }
+
+          // Gravitational Brake Ring Effect
+          if (g.braking) {
+            C.beginPath();
+            C.arc(sx, sy, 24 + Math.sin(g.time * 15) * 3, 0, Math.PI * 2);
+            C.strokeStyle = 'rgba(60,210,255,0.4)';
+            C.lineWidth = 2;
+            C.stroke();
+          }
+        }
+
+        // --- Floating Score Popups ---
+        for (let i = 0; i < g.scorePopups.length; i++) {
+          const sp = g.scorePopups[i];
+          const px = sp.x - cx, py = sp.y - cy;
+          const alpha = Math.max(0, Math.min(1, sp.life / sp.maxLife));
+          const rise = (1 - sp.life / sp.maxLife) * 30;
+          C.globalAlpha = alpha;
+          C.font = sp.text.startsWith('+') ? '700 15px Orbitron' : '700 13px Orbitron';
+          C.fillStyle = sp.color;
+          C.textAlign = 'center';
+          C.fillText(sp.text, px, py - rise);
+        }
+        C.globalAlpha = 1;
+
+        // --- Off-Screen Warning Indicators (Black Holes) ---
+        for (let i = 0; i < g.blackholes.length; i++) {
+          const bh = g.blackholes[i];
+          const bhx = bh.x - cx, bhy = bh.y - cy;
+          if (Math.abs(bhx) < W / 2 - 50 && Math.abs(bhy) < H / 2 - 50) continue;
+          const angle = Math.atan2(bhy, bhx);
+          const fx = Math.max(-W / 2 + 35, Math.min(W / 2 - 35, Math.cos(angle) * (W / 2 - 35)));
+          const fy = Math.max(-H / 2 + 35, Math.min(H / 2 - 35, Math.sin(angle) * (H / 2 - 35)));
+          const dist = Math.hypot(bh.x - g.ship.x, bh.y - g.ship.y);
+          const urgency = Math.max(0, 1 - dist / 1200);
+
+          C.save();
+          try {
+            C.translate(fx, fy);
+            C.rotate(angle);
+            C.beginPath();
+            C.moveTo(12, 0); C.lineTo(-5, -7); C.lineTo(-5, 7); C.closePath();
+            C.fillStyle = `rgba(168,85,247,${0.4 + urgency * 0.4 + Math.sin(g.time * 5) * 0.15})`;
+            C.fill();
+            C.strokeStyle = `rgba(192,132,252,${0.5 + urgency * 0.3})`;
+            C.lineWidth = 1;
+            C.stroke();
+
+            C.rotate(-angle);
+            C.font = '600 9px Rajdhani';
+            C.fillStyle = `rgba(192,132,252,${0.6 + urgency * 0.3})`;
+            C.textAlign = 'center';
+            C.fillText('⚠ ' + Math.round(dist) + 'm', 0, -12);
+          } finally {
+            C.restore();
+          }
+        }
+
+        // --- Off-Screen Distress Indicators (Astronauts) ---
+        for (let i = 0; i < g.astronauts.length; i++) {
+          const a = g.astronauts[i];
+          const ax = a.x - cx, ay = a.y - cy;
+          if (Math.abs(ax) < W / 2 - 40 && Math.abs(ay) < H / 2 - 40) continue;
+          const angle = Math.atan2(ay, ax);
+          const fx = Math.max(-W / 2 + 30, Math.min(W / 2 - 30, Math.cos(angle) * (W / 2 - 30)));
+          const fy = Math.max(-H / 2 + 30, Math.min(H / 2 - 30, Math.sin(angle) * (H / 2 - 30)));
+          const dist = Math.hypot(a.x - g.ship.x, a.y - g.ship.y);
+
+          C.save();
+          try {
+            C.translate(fx, fy);
+            C.rotate(angle);
+            C.beginPath();
+            C.moveTo(10, 0); C.lineTo(-4, -5); C.lineTo(-4, 5); C.closePath();
+            C.fillStyle = `rgba(60,255,140,${0.5 + Math.sin(g.time * 4) * 0.2})`;
+            C.fill();
+
+            C.rotate(-angle);
+            C.font = '500 9px Rajdhani';
+            C.fillStyle = 'rgba(60,255,140,0.7)';
+            C.textAlign = 'center';
+            C.fillText(Math.round(dist) + 'm', 0, -10);
+          } finally {
+            C.restore();
+          }
+        }
+      } finally {
+        C.restore();
+      }
+    }
+
+    // ===================== HUD UPDATE =====================
+    function updateHUD(g) {
+      try {
+        const hullBar = document.getElementById('hullBar');
+        const hullText = document.getElementById('hullText');
+        const shieldBar = document.getElementById('shieldBar');
+        const shieldText = document.getElementById('shieldText');
+        const nitroBar = document.getElementById('nitroBar');
+        const nitroText = document.getElementById('nitroText');
+
+        if (hullBar) hullBar.style.width = Math.max(0, Math.min(100, g.hull)) + '%';
+        if (hullText) hullText.textContent = Math.round(g.hull) + '%';
+        if (shieldBar) shieldBar.style.width = Math.max(0, Math.min(100, g.shield)) + '%';
+        if (shieldText) shieldText.textContent = Math.round(g.shield) + '%';
+        if (nitroBar) nitroBar.style.width = Math.max(0, Math.min(100, g.nitro)) + '%';
+        if (nitroText) nitroText.textContent = Math.round(g.nitro) + '%';
+
+        const tIdx = Math.min(Math.max(0, g.threatLevel - 1), THREAT_NAMES.length - 1);
+        const tn = document.getElementById('threatName');
+        if (tn) {
+          tn.textContent = THREAT_NAMES[tIdx];
+          if (g.threatLevel >= 5) {
+            tn.classList.remove('glow-text'); tn.classList.add('glow-text-warn');
+          } else {
+            tn.classList.remove('glow-text-warn'); tn.classList.add('glow-text');
+          }
+        }
+
+        const rescuesForNext = g.threatLevel * 3;
+        const rescuesInLevel = g.rescues - (g.threatLevel - 1) * 3;
+        const progress = Math.max(0, Math.min(100, (rescuesInLevel / 3) * 100));
+        const threatBar = document.getElementById('threatBar');
+        const rescueCount = document.getElementById('rescueCount');
+        const nextLevelText = document.getElementById('nextLevelText');
+
+        if (threatBar) threatBar.style.width = progress + '%';
+        if (rescueCount) rescueCount.textContent = g.rescues + ' Rescued';
+        if (nextLevelText) nextLevelText.textContent = g.threatLevel >= 10 ? 'MAX' : 'Next: ' + rescuesForNext;
+
+        const scoreDisplay = document.getElementById('scoreDisplay');
+        const rescueBadge = document.getElementById('rescueBadge');
+        const pointsBadge = document.getElementById('pointsBadge');
+
+        if (scoreDisplay) scoreDisplay.textContent = g.score.toLocaleString();
+        if (rescueBadge) rescueBadge.textContent = '🧑‍🚀 ' + g.rescues;
+
+        const ptsIdx = Math.min(Math.max(0, g.threatLevel - 1), POINTS_PER_LEVEL.length - 1);
+        const pts = POINTS_PER_LEVEL[ptsIdx];
+        if (pointsBadge) pointsBadge.textContent = '+' + pts + 'pts';
+
+        if (hullBar) {
+          if (g.hull < 30) hullBar.style.background = 'linear-gradient(90deg,#ff2020,#ff5040)';
+          else hullBar.style.background = 'linear-gradient(90deg,#ff3535,#ff7550)';
+        }
+      } catch (e) {
+        console.error("HUD update error:", e);
+      }
+    }
+
+    // ===================== OVERLAYS =====================
+    function showStart() {
+      const overlay = document.getElementById('overlay');
+      const startScreen = document.getElementById('startScreen');
+      const gameOverScreen = document.getElementById('gameOverScreen');
+      if (overlay) overlay.style.display = 'flex';
+      if (startScreen) startScreen.style.display = 'block';
+      if (gameOverScreen) gameOverScreen.style.display = 'none';
+
+      if (highScore > 0) {
+        const hsStart = document.getElementById('highScoreStart');
+        const hsValStart = document.getElementById('hsValStart');
+        if (hsStart) hsStart.classList.remove('hidden');
+        if (hsValStart) hsValStart.textContent = highScore.toLocaleString();
+      }
+    }
+
+    function showGameOver(g) {
+      const overlay = document.getElementById('overlay');
+      const startScreen = document.getElementById('startScreen');
+      const gameOverScreen = document.getElementById('gameOverScreen');
+      if (overlay) overlay.style.display = 'flex';
+      if (startScreen) startScreen.style.display = 'none';
+      if (gameOverScreen) gameOverScreen.style.display = 'block';
+
+      const failReason = document.getElementById('failReason');
+      if (failReason) {
+        failReason.textContent = g.singularityDeathReason
+          ? g.singularityDeathReason
+          : 'Hull integrity depleted at Threat Level ' + g.threatLevel + '.';
+      }
+
+      const goScore = document.getElementById('goScore');
+      const goRescues = document.getElementById('goRescues');
+      const goThreat = document.getElementById('goThreat');
+      const goNewHigh = document.getElementById('goNewHigh');
+
+      if (goScore) goScore.textContent = g.score.toLocaleString();
+      if (goRescues) goRescues.textContent = g.rescues;
+      if (goThreat) goThreat.textContent = g.threatLevel;
+
+      const isNewHigh = g.score > highScore;
+      if (isNewHigh) {
+        highScore = g.score;
+        try {
+          localStorage.setItem('zgv_highscore', highScore.toString());
+        } catch (e) { }
+        if (goNewHigh) goNewHigh.classList.remove('hidden');
+      } else {
+        if (goNewHigh) goNewHigh.classList.add('hidden');
+      }
+
+      if (highScore > 0) {
+        const hsOver = document.getElementById('highScoreOver');
+        const hsValOver = document.getElementById('hsValOver');
+        if (hsOver) hsOver.classList.remove('hidden');
+        if (hsValOver) hsValOver.textContent = highScore.toLocaleString();
+      }
+    }
+
+    function hideOverlay() {
+      const overlay = document.getElementById('overlay');
+      if (overlay) overlay.style.display = 'none';
+    }
+
+    // ===================== GAME LOOP SAFEGUARDS =====================
+    let lastTime = 0;
+
+    function gameLoop(timestamp) {
+      requestAnimationFrame(gameLoop);
+
+      try {
+        const now = (typeof timestamp === 'number' && timestamp > 0) ? timestamp : performance.now();
+        let dt = (lastTime > 0) ? (now - lastTime) / 1000 : 0.016;
+        lastTime = now;
+
+        if (!Number.isFinite(dt) || dt <= 0) dt = 0.016;
+        dt = Math.min(dt, 0.1);
+
+        if (game) {
+          if (!game.running) {
+            game.time += dt;
+          }
+          update(game, dt);
+          render(game);
+        }
+      } catch (loopError) {
+        console.error("Game loop error:", loopError);
+      }
+    }
+
+    function startGame() {
+      try {
+        AudioEngine.init();
+        AudioEngine.start();
+        AudioEngine.stopSingularityHum();
+        resetJoystick();
+        game = newGame();
+        game.running = true;
+
+        for (let i = 0; i < 3; i++) game.astronauts.push(spawnAstronautAround(game));
+        for (let i = 0; i < 8; i++) game.asteroids.push(spawnAsteroidAround(game));
+
+        hideOverlay();
+      } catch (e) {
+        console.error("Start game error:", e);
+      }
+    }
+
+    // ===================== INITIALIZATION =====================
+    const btnStart = document.getElementById('btnStart');
+    const btnRestart = document.getElementById('btnRestart');
+    if (btnStart) btnStart.addEventListener('click', startGame);
+    if (btnRestart) btnRestart.addEventListener('click', startGame);
+
+    canvas.addEventListener('contextmenu', e => e.preventDefault());
+
+    game = newGame();
+    lastTime = performance.now();
+    requestAnimationFrame(gameLoop);
+    showStart();
+  </script>
+</body>
+
+</html>
